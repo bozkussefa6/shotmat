@@ -1,29 +1,43 @@
 {
   "expo": {
     "name": "ShotMat",
-    "slug": "ShotMat",
+    "slug": "shotmat",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0A0A0A"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.shotmat.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "ShotMat kamera erişimi gerektirmez.",
+        "NSPhotoLibraryUsageDescription": "Parti sonuçlarınızı kaydetmek için fotoğraf galerisine erişim gerekebilir."
+      }
     },
     "android": {
+      "package": "com.shotmat.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0A0A0A"
       },
       "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-localization",
+      "expo-font"
+    ],
+    "extra": {
+      "admobInterstitialId": "",
+      "admobRewardedId": ""
     }
   }
 }
