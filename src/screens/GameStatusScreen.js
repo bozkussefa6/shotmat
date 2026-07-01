@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -18,13 +17,15 @@ import {
   Typography,
   BorderRadius,
   Buttons,
-  Layout,
   Shadows,
 } from '../styles/GlobalStyles';
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
 import ShotBadge from '../components/ShotBadge';
 import ScreenHeader from '../components/ScreenHeader';
+import ScreenSafeArea from '../components/ScreenSafeArea';
+import { resetGameFlowTo } from '../navigation/gameFlowHelpers';
+import PlayerAvatar from '../components/PlayerAvatar';
 
 export default function GameStatusScreen() {
   const { t } = useTranslation();
@@ -63,7 +64,7 @@ export default function GameStatusScreen() {
           style: 'destructive',
           onPress: async () => {
             await GameService.endGame(gameId);
-            navigation.replace('GameEnd', { gameId });
+            resetGameFlowTo(navigation, 'GameEnd', { gameId });
           },
         },
       ]
@@ -77,7 +78,7 @@ export default function GameStatusScreen() {
   const questionsDone = game?.rounds?.filter((r) => !r.skipped).length || 0;
 
   return (
-    <SafeAreaView style={Layout.screen}>
+    <ScreenSafeArea edges={['top', 'left', 'right', 'bottom']}>
       <ScreenHeader title={t('gameStatus.title')} onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -97,7 +98,7 @@ export default function GameStatusScreen() {
           return (
             <View key={player.id} style={styles.playerRow}>
               <Text style={styles.rank}>#{index + 1}</Text>
-              <Text style={styles.playerEmoji}>{player.emoji}</Text>
+              <PlayerAvatar player={player} size="sm" />
               <View style={{ flex: 1 }}>
                 <View style={styles.playerNameRow}>
                   <Text style={styles.playerName}>{player.name}</Text>
@@ -128,7 +129,7 @@ export default function GameStatusScreen() {
           <Text style={Buttons.primaryText}>{t('gameStatus.continueGame')}</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

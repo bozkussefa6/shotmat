@@ -104,7 +104,7 @@ export default function SettingsScreen() {
               >
                 <Text style={styles.optionEmoji}>{lang === 'tr' ? '🇹🇷' : '🇬🇧'}</Text>
                 <Text style={[styles.optionText, active && styles.optionTextActive]}>
-                  {t(`settings.language${lang.toUpperCase()}`)}
+                  {t(`settings.language${lang.charAt(0).toUpperCase()}${lang.slice(1)}`)}
                 </Text>
                 {active && <MaterialCommunityIcons name="check" size={18} color={Colors.primary} />}
               </TouchableOpacity>

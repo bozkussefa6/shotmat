@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -19,18 +18,20 @@ import {
   Typography,
   BorderRadius,
   Buttons,
-  Layout,
   TypeColors,
   Shadows,
 } from '../styles/GlobalStyles';
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
 import ScreenHeader from '../components/ScreenHeader';
+import ScreenSafeArea from '../components/ScreenSafeArea';
 import { QUESTION_COUNT_BY_TYPE } from '../data/questions';
+import PlayerAvatar from '../components/PlayerAvatar';
+import { getAvatarColor } from '../utils/playerAvatar';
+import { isDuplicatePlayerName } from '../utils/playerNames';
 
 const STEPS = ['players', 'categories', 'mode'];
 const QUESTION_MODES = ['system_only', 'mixed', 'user_first', 'system_random'];
-const EMOJIS = ['🙋', '😎', '🤩', '😈', '🦊', '🐺', '🦁', '🐯', '🌚', '🌝'];
 
 export default function GameSetupScreen() {
   const { t } = useTranslation();
@@ -85,10 +86,14 @@ export default function GameSetupScreen() {
 
   const addNewPlayer = async () => {
     if (!newPlayerName.trim()) return;
+    if (isDuplicatePlayerName(newPlayerName, savedPlayers)) {
+      Alert.alert(t('common.error'), t('players.nameTaken'));
+      return;
+    }
     const player = {
       id: GameService.generateId(),
       name: newPlayerName.trim(),
-      emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
+      color: getAvatarColor(newPlayerName.trim()),
       isMainUser: false,
       createdAt: new Date().toISOString(),
     };
@@ -162,7 +167,7 @@ export default function GameSetupScreen() {
   const modeDescKey = (mode) => `${modeKey(mode)}Desc`;
 
   return (
-    <SafeAreaView style={Layout.screen}>
+    <ScreenSafeArea edges={['top', 'left', 'right', 'bottom']}>
       <ScreenHeader
         title={t('gameSetup.title')}
         subtitle={t('gameSetup.stepOf', { current: step + 1, total: STEPS.length })}
@@ -190,7 +195,7 @@ export default function GameSetupScreen() {
                   onPress={() => togglePlayer(player.id)}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.playerEmoji}>{player.emoji}</Text>
+                  <PlayerAvatar player={player} size="sm" selected={selected} />
                   <Text style={styles.playerName}>
                     {player.name}
                     {player.isMainUser ? ` (${t('gameSetup.me')})` : ''}
@@ -320,7 +325,7 @@ export default function GameSetupScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 

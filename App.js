@@ -7,8 +7,8 @@ import { StatusBar } from 'expo-status-bar';
 import { initI18n } from './src/i18n';
 import StorageService from './src/services/StorageService';
 import AdService from './src/services/AdService';
-import SoundService from './src/services/SoundService';
 import PremiumService from './src/services/PremiumService';
+import SoundService from './src/services/SoundService';
 import { Colors } from './src/styles/GlobalStyles';
 import Navigation from './src/navigation';
 import { AppContext } from './src/context/AppContext';
@@ -24,7 +24,7 @@ export default function App() {
       const settings = await StorageService.getSettings();
       setIsOnboarding(!settings.onboardingDone);
       await AdService.initialize();
-      PremiumService.initIAP();
+      await PremiumService.initIAP();
       SoundService.preload();
     } catch (e) {
       console.error('[App] Bootstrap error:', e);
@@ -49,7 +49,7 @@ export default function App() {
   if (!appReady) {
     return (
       <View style={styles.splash}>
-        <AppLogo size="md" variant="iconOnly" />
+        <AppLogo size="lg" />
         <ActivityIndicator size="large" color={Colors.primary} style={styles.loader} />
       </View>
     );

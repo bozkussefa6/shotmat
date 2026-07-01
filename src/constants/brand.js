@@ -4,3 +4,7 @@ export const APP_TAGLINE_KEY = 'brand.tagline';
 export const APP_BUNDLE_ID = 'com.shotmat.app';
 export const PREMIUM_PRODUCT_ID = 'shotmat_premium_yearly';
 export const FREE_CUSTOM_QUESTION_LIMIT = 5;
+export const SUPPORT_EMAIL = 'support@shotmat.app';
+export const PRIVACY_POLICY_URL = 'https://shotmat.app/privacy';
+export const SUPPORT_URL = 'https://shotmat.app/support';
+export const COPYRIGHT_HOLDER = 'ShotMat';

@@ -22,6 +22,19 @@ export const Colors = {
   dareType: '#E63946',
 };
 
+export const AvatarColors = [
+  '#E63946',
+  '#E8A838',
+  '#4A90D9',
+  '#2DC653',
+  '#9B59B6',
+  '#1ABC9C',
+  '#E67E22',
+  '#3498DB',
+  '#F5C518',
+  '#E84393',
+];
+
 export const Spacing = {
   xs: 4,
   sm: 8,
@@ -170,6 +183,44 @@ export const Layout = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.border,
     marginVertical: Spacing.sm,
+  },
+  toolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    minHeight: 44,
+  },
+  toolbarSide: {
+    minWidth: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  toolbarSideRight: {
+    minWidth: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  toolbarCenter: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.sm,
+  },
+  toolbarTitle: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  toolbarAction: {
+    padding: Spacing.xs,
+  },
+  toolbarActionText: {
+    ...Typography.buttonSmall,
+    color: Colors.textSecondary,
   },
 });
 

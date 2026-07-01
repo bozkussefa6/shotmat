@@ -48,9 +48,9 @@ export default function PremiumScreen() {
     setLoading(true);
     try {
       await PremiumService.purchasePremium();
-      await PremiumService.setPremium(true);
       setIsPremium(true);
-    } catch {
+    } catch (e) {
+      if (e?.code === 'E_USER_CANCELLED') return;
       Alert.alert(t('common.error'), t('premium.purchaseError'));
     } finally {
       setLoading(false);
@@ -61,7 +61,6 @@ export default function PremiumScreen() {
     setLoading(true);
     try {
       await PremiumService.restorePurchase();
-      await PremiumService.setPremium(true);
       setIsPremium(true);
       Alert.alert(t('common.success'), t('premium.restoreSuccess'));
     } catch {

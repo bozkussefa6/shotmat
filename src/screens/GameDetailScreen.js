@@ -25,9 +25,11 @@ import {
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
 import ShotBadge from '../components/ShotBadge';
+import PlayerAvatar from '../components/PlayerAvatar';
 
 import ScreenHeader from '../components/ScreenHeader';
 import { formatDateWithYear } from '../utils/formatDate';
+import { getQuestionText } from '../utils/questionText';
 
 export default function GameDetailScreen() {
   const { t, i18n } = useTranslation();
@@ -149,7 +151,7 @@ export default function GameDetailScreen() {
           renderItem={({ item: player, index }) => (
             <View style={[styles.playerRow, player.deleted && styles.playerRowDeleted]}>
               <Text style={styles.rank}>#{index + 1}</Text>
-              <Text style={styles.playerEmoji}>{player.emoji}</Text>
+              <PlayerAvatar player={player} size="sm" />
               <Text style={[styles.playerName, player.deleted && styles.playerNameDeleted]}>
                 {player.name}
               </Text>
@@ -164,7 +166,7 @@ export default function GameDetailScreen() {
           contentContainerStyle={styles.list}
           renderItem={({ item: round, index }) => {
             const typeColor = TypeColors[round.question?.type] || Colors.primary;
-            const qText = round.question?.[lang] || round.question?.tr || '';
+            const qText = getQuestionText(round.question, lang);
             const targetPlayer = round.targetPlayerId
               ? players.find((p) => p.id === round.targetPlayerId)
               : null;

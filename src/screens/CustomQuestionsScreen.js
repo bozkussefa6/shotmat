@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -29,19 +29,18 @@ import GameService from '../services/GameService';
 import PremiumService from '../services/PremiumService';
 import ScreenHeader from '../components/ScreenHeader';
 import { FREE_CUSTOM_QUESTION_LIMIT } from '../constants/brand';
+import { getQuestionText } from '../utils/questionText';
 
 const TYPES = ['group', 'personal', 'dare'];
 
-const typeIcon = { group: 'account-group', personal: 'comment-question', dare: 'lightning-bolt' };
-
 export default function CustomQuestionsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [questions, setQuestions] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingQ, setEditingQ] = useState(null);
   const [textInput, setTextInput] = useState('');
-  const [enTextInput, setEnTextInput] = useState('');
   const [selectedType, setSelectedType] = useState(null);
 
   const [isPremium, setIsPremium] = useState(false);
@@ -67,15 +66,14 @@ export default function CustomQuestionsScreen() {
     }
     setEditingQ(null);
     setTextInput('');
-    setEnTextInput('');
     setSelectedType(null);
     setModalVisible(true);
   };
 
   const openEdit = (q) => {
+    const lang = i18n.language === 'tr' ? 'tr' : 'en';
     setEditingQ(q);
-    setTextInput(q.textTr);
-    setEnTextInput(q.textEn !== q.textTr ? q.textEn : '');
+    setTextInput(getQuestionText(q, lang));
     setSelectedType(q.type);
     setModalVisible(true);
   };
@@ -89,13 +87,16 @@ export default function CustomQuestionsScreen() {
       Alert.alert(t('common.error'), t('customQuestions.typeRequired'));
       return;
     }
-    const textEn = enTextInput.trim() || textInput.trim();
+    const lang = i18n.language === 'tr' ? 'tr' : 'en';
+    const text = textInput.trim();
+    const existingTr = editingQ?.tr || editingQ?.textTr || '';
+    const existingEn = editingQ?.en || editingQ?.textEn || '';
     const payload = {
-      textTr: textInput.trim(),
-      textEn,
-      tr: textInput.trim(),
-      en: textEn,
       type: selectedType,
+      tr: lang === 'tr' ? text : existingTr,
+      en: lang === 'en' ? text : existingEn,
+      textTr: lang === 'tr' ? text : existingTr,
+      textEn: lang === 'en' ? text : existingEn,
     };
     if (editingQ) {
       await StorageService.updateCustomQuestion(editingQ.id, payload);
@@ -126,6 +127,7 @@ export default function CustomQuestionsScreen() {
 
   const renderQuestion = ({ item: q }) => {
     const color = TypeColors[q.type] || Colors.primary;
+    const lang = i18n.language === 'tr' ? 'tr' : 'en';
     return (
       <View style={styles.qCard}>
         <View style={[styles.qTypeDot, { backgroundColor: color }]} />
@@ -133,7 +135,7 @@ export default function CustomQuestionsScreen() {
           <Text style={styles.qType} numberOfLines={1}>
             {t(`customQuestions.type${q.type.charAt(0).toUpperCase() + q.type.slice(1)}`)}
           </Text>
-          <Text style={styles.qText} numberOfLines={3}>{q.textTr}</Text>
+          <Text style={styles.qText} numberOfLines={3}>{getQuestionText(q, lang)}</Text>
         </View>
         <TouchableOpacity style={styles.actionBtn} onPress={() => openEdit(q)}>
           <MaterialCommunityIcons name="pencil" size={18} color={Colors.textSecondary} />
@@ -180,7 +182,16 @@ export default function CustomQuestionsScreen() {
 
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={styles.modalCard} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            contentContainerStyle={[
+              styles.modalCard,
+              {
+                paddingTop: Spacing.lg + insets.top,
+                paddingBottom: Spacing.xxl + insets.bottom,
+              },
+            ]}
+            keyboardShouldPersistTaps="handled"
+          >
             <Text style={styles.modalTitle}>
               {editingQ ? t('customQuestions.editQuestion') : t('customQuestions.addNew')}
             </Text>
@@ -198,7 +209,6 @@ export default function CustomQuestionsScreen() {
                     onPress={() => setSelectedType(type)}
                     activeOpacity={0.8}
                   >
-                    <MaterialCommunityIcons name={typeIcon[type]} size={16} color={selected ? Colors.background : color} />
                     <Text style={[styles.typeBtnText, { color: selected ? Colors.background : color }]}>
                       {t(`customQuestions.type${type.charAt(0).toUpperCase() + type.slice(1)}`)}
                     </Text>
@@ -228,20 +238,6 @@ export default function CustomQuestionsScreen() {
                 <Text style={styles.hintText}>{t('customQuestions.playerHint')}</Text>
               </View>
             )}
-
-            {/* English translation */}
-            <Text style={styles.fieldLabel}>{t('customQuestions.englishText')}</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder={t('customQuestions.englishPlaceholder')}
-              placeholderTextColor={Colors.textMuted}
-              value={enTextInput}
-              onChangeText={setEnTextInput}
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-              maxLength={300}
-            />
 
             <View style={styles.modalBtns}>
               <TouchableOpacity style={[Buttons.secondary, { flex: 1 }]} onPress={() => setModalVisible(false)}>
@@ -327,9 +323,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
     gap: Spacing.md,
-    paddingBottom: Spacing.xxl,
   },
   modalTitle: { ...Typography.h3, textAlign: 'center' },
   fieldLabel: { ...Typography.bodySmall, color: Colors.textSecondary },
@@ -339,10 +334,8 @@ const styles = StyleSheet.create({
   },
   typeBtn: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.md,
     borderWidth: 1.5,
@@ -351,6 +344,7 @@ const styles = StyleSheet.create({
   typeBtnText: {
     ...Typography.caption,
     fontWeight: '700',
+    textAlign: 'center',
   },
   textInput: {
     backgroundColor: Colors.card,

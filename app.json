@@ -15,9 +15,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.shotmat.app",
+      "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "ShotMat kamera erişimi gerektirmez.",
-        "NSPhotoLibraryUsageDescription": "Parti sonuçlarınızı kaydetmek için fotoğraf galerisine erişim gerekebilir."
+        "NSPhotoLibraryUsageDescription": "Parti sonuçlarınızı kaydetmek için fotoğraf galerisine erişim gerekebilir.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -33,11 +35,23 @@
     },
     "plugins": [
       "expo-localization",
-      "expo-font"
+      "expo-font",
+      "react-native-iap",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "iosAppId": "ca-app-pub-7264754027467588~4008160204",
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "userTrackingUsageDescription": "Reklamların size uygun sunulması için kullanılır."
+        }
+      ]
     ],
     "extra": {
-      "admobInterstitialId": "",
-      "admobRewardedId": ""
+      "admobInterstitialIdIos": "ca-app-pub-7264754027467588/3707374938",
+      "admobInterstitialIdAndroid": "",
+      "eas": {
+        "projectId": "cf8f9448-d596-483b-aca4-ca734c6da81c"
+      }
     }
   }
 }

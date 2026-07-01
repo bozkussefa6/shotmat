@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { normalizePlayer, getAvatarColor } from '../utils/playerAvatar';
+import { isDuplicatePlayerName } from '../utils/playerNames';
 
 const KEYS = {
   MAIN_USER: 'shotmat_main_user',
@@ -33,8 +35,21 @@ const set = async (key, value) => {
 };
 
 // --- Main User ---
-const getMainUser = () => get(KEYS.MAIN_USER);
-const saveMainUser = (user) => set(KEYS.MAIN_USER, user);
+const getMainUser = async () => {
+  const user = await get(KEYS.MAIN_USER);
+  if (!user) return null;
+  if (!user.color) {
+    const normalized = normalizePlayer(user);
+    await set(KEYS.MAIN_USER, normalized);
+    return normalized;
+  }
+  return user;
+};
+const saveMainUser = async (user) => {
+  const normalized = normalizePlayer(user);
+  await set(KEYS.MAIN_USER, normalized);
+  return normalized;
+};
 
 // --- Settings ---
 const getSettings = async () => {
@@ -47,17 +62,38 @@ const saveSettings = async (updates) => {
 };
 
 // --- Players ---
-const getPlayers = async () => (await get(KEYS.PLAYERS)) || [];
+const migratePlayersIfNeeded = async (players) => {
+  let changed = false;
+  const migrated = players.map((p) => {
+    if (p.color && !p.emoji) return p;
+    const normalized = normalizePlayer(p);
+    if (normalized.color !== p.color || p.emoji) changed = true;
+    return normalized;
+  });
+  if (changed) await set(KEYS.PLAYERS, migrated);
+  return migrated;
+};
+
+const getPlayers = async () => {
+  const raw = (await get(KEYS.PLAYERS)) || [];
+  return migratePlayersIfNeeded(raw);
+};
 const savePlayers = (players) => set(KEYS.PLAYERS, players);
 
 const addPlayer = async (player) => {
   const players = await getPlayers();
-  players.push(player);
+  if (isDuplicatePlayerName(player.name, players, player.id)) {
+    throw new Error('DUPLICATE_PLAYER_NAME');
+  }
+  players.push(normalizePlayer(player));
   await savePlayers(players);
 };
 
 const updatePlayer = async (id, updates) => {
   const players = await getPlayers();
+  if (updates.name && isDuplicatePlayerName(updates.name, players, id)) {
+    throw new Error('DUPLICATE_PLAYER_NAME');
+  }
   const idx = players.findIndex((p) => p.id === id);
   if (idx !== -1) {
     players[idx] = { ...players[idx], ...updates };
@@ -69,7 +105,13 @@ const deletePlayer = async (id) => {
   const players = await getPlayers();
   const updated = players.map((p) =>
     p.id === id
-      ? { id: p.id, name: 'Silinen Oyuncu', emoji: '👻', deleted: true, isMainUser: false }
+      ? {
+          id: p.id,
+          name: 'Silinen Oyuncu',
+          color: getAvatarColor('Silinen Oyuncu'),
+          deleted: true,
+          isMainUser: false,
+        }
       : p
   );
   await savePlayers(updated);

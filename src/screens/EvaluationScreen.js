@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +7,6 @@ import {
   ScrollView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 
@@ -18,14 +16,14 @@ import {
   Typography,
   BorderRadius,
   Buttons,
-  Layout,
   TypeColors,
-  Shadows,
 } from '../styles/GlobalStyles';
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
-import ShotBadge from '../components/ShotBadge';
 import SoundService from '../services/SoundService';
+import PlayerAvatar from '../components/PlayerAvatar';
+import ScreenSafeArea from '../components/ScreenSafeArea';
+import AppToolbar from '../components/AppToolbar';
 
 export default function EvaluationScreen() {
   const { t } = useTranslation();
@@ -112,67 +110,50 @@ export default function EvaluationScreen() {
   };
 
   return (
-    <SafeAreaView style={Layout.screen}>
-      <View style={styles.header}>
-        <View style={[styles.typeDot, { backgroundColor: typeColor }]} />
-        <Text style={styles.headerTitle}>{getTitle()}</Text>
-      </View>
+    <ScreenSafeArea edges={['top', 'left', 'right', 'bottom']}>
+      <AppToolbar
+        left={
+          <View style={[styles.typeDot, { backgroundColor: typeColor }]} />
+        }
+        title={
+          <Text style={styles.headerTitle} numberOfLines={2}>
+            {getTitle()}
+          </Text>
+        }
+      />
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Personal / Dare — binary choice for target */}
         {isPersonalOrDare && targetPlayer && (
-          <View style={styles.binarySection}>
-            <View style={styles.targetCard}>
-              <Text style={styles.targetEmoji}>{targetPlayer.emoji}</Text>
-              <Text style={styles.targetName}>{targetPlayer.name}</Text>
-            </View>
-            <View style={styles.binaryRow}>
-              <TouchableOpacity
-                style={[
-                  styles.binaryBtn,
-                  styles.binaryBtnSafe,
-                  dareCompleted === true && styles.binaryBtnSafeActive,
-                ]}
-                onPress={() => handleDareResult(true)}
-                activeOpacity={0.8}
-              >
-                <MaterialCommunityIcons name="check-circle" size={24} color={dareCompleted === true ? Colors.background : Colors.success} />
-                <Text style={[styles.binaryBtnText, dareCompleted === true && { color: Colors.background }]}>
-                  {questionType === 'dare' ? t('evaluation.dareCompleted') : t('evaluation.personalAnswered')}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.binaryBtn,
-                  styles.binaryBtnShot,
-                  dareCompleted === false && styles.binaryBtnShotActive,
-                ]}
-                onPress={() => handleDareResult(false)}
-                activeOpacity={0.8}
-              >
-                <ShotBadge size="md" variant="icon" />
-                <Text style={[styles.binaryBtnText, dareCompleted === false && { color: Colors.background }]}>
-                  {questionType === 'dare' ? t('evaluation.dareNotCompleted') : t('evaluation.personalNotAnswered')}
-                </Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.binaryRow}>
+            <TouchableOpacity
+              style={[
+                styles.binaryBtn,
+                styles.binaryBtnSafe,
+                dareCompleted === true && styles.binaryBtnSafeActive,
+              ]}
+              onPress={() => handleDareResult(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.binaryBtnText, dareCompleted === true && styles.binaryBtnTextActive]}>
+                {questionType === 'dare' ? t('evaluation.dareCompleted') : t('evaluation.personalAnswered')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.binaryBtn,
+                styles.binaryBtnShot,
+                dareCompleted === false && styles.binaryBtnShotActive,
+              ]}
+              onPress={() => handleDareResult(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.binaryBtnText, dareCompleted === false && styles.binaryBtnTextActive]}>
+                {questionType === 'dare' ? t('evaluation.dareNotCompleted') : t('evaluation.personalNotAnswered')}
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 
-        {/* Personal/Dare + shot: just show target player, no selection needed */}
-        {isPersonalOrDare && dareCompleted === false && targetPlayer && (
-          <View style={styles.playerSection}>
-            <View style={[styles.playerRow, styles.playerRowShot]}>
-              <Text style={styles.playerEmoji}>{targetPlayer.emoji}</Text>
-              <Text style={styles.playerName}>{targetPlayer.name}</Text>
-              <View style={[styles.shotToggle, styles.shotToggleActive]}>
-                <ShotBadge size="sm" variant="icon" />
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Group question only: show full player list */}
         {!isPersonalOrDare && (
           <View style={styles.playerSection}>
             {players.map((player) => {
@@ -184,22 +165,17 @@ export default function EvaluationScreen() {
                   onPress={() => toggleShotTaker(player.id)}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.playerEmoji}>{player.emoji}</Text>
+                  <PlayerAvatar player={player} size="sm" />
                   <Text style={styles.playerName}>{player.name}</Text>
-                  <View style={[styles.shotToggle, isShot && styles.shotToggleActive]}>
-                    {isShot ? (
-                      <ShotBadge size="sm" variant="icon" />
-                    ) : (
-                      <MaterialCommunityIcons name="circle-outline" size={22} color={Colors.textMuted} />
-                    )}
-                  </View>
+                  {isShot && (
+                    <Text style={styles.shotLabel}>{t('evaluation.markShot')}</Text>
+                  )}
                 </TouchableOpacity>
               );
             })}
           </View>
         )}
 
-        {/* Shot summary */}
         {shotTakers.length > 0 && (
           <View style={styles.summaryRow}>
             <Text style={styles.summaryText}>
@@ -219,18 +195,11 @@ export default function EvaluationScreen() {
           <Text style={Buttons.primaryText}>{t('evaluation.continueGame')}</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
-  },
   typeDot: {
     width: 10,
     height: 10,
@@ -238,42 +207,25 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...Typography.h3,
-    flex: 1,
+    textAlign: 'center',
   },
   scroll: {
     paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.xxl,
-  },
-  binarySection: {
-    marginBottom: Spacing.lg,
-  },
-  targetCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: Colors.card,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  targetEmoji: {
-    fontSize: 28,
-  },
-  targetName: {
-    ...Typography.h3,
   },
   binaryRow: {
     flexDirection: 'row',
     gap: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
   binaryBtn: {
     flex: 1,
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     alignItems: 'center',
-    gap: Spacing.xs,
+    justifyContent: 'center',
+    minHeight: 72,
     borderWidth: 2,
     borderColor: Colors.border,
     backgroundColor: Colors.card,
@@ -295,10 +247,8 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     textAlign: 'center',
   },
-  additionalLabel: {
-    ...Typography.bodySmall,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.sm,
+  binaryBtnTextActive: {
+    color: Colors.background,
   },
   playerSection: {
     gap: Spacing.sm,
@@ -317,29 +267,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.danger,
     backgroundColor: Colors.dangerDark + '22',
   },
-  playerRowTarget: {
-    borderColor: Colors.primary,
-  },
-  playerEmoji: {
-    fontSize: 24,
-  },
   playerName: {
     ...Typography.bodyMedium,
     flex: 1,
   },
-  shotToggle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  shotToggleActive: {
-    backgroundColor: Colors.danger,
-    borderColor: Colors.danger,
+  shotLabel: {
+    ...Typography.caption,
+    color: Colors.danger,
+    fontWeight: '700',
   },
   summaryRow: {
     alignItems: 'center',

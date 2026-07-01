@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -22,7 +21,6 @@ import {
   Typography,
   BorderRadius,
   Buttons,
-  Layout,
   Shadows,
   Gradients,
 } from '../styles/GlobalStyles';
@@ -32,7 +30,10 @@ import AdService from '../services/AdService';
 import PremiumService from '../services/PremiumService';
 import ShotBadge from '../components/ShotBadge';
 import AppLogo from '../components/AppLogo';
+import PlayerAvatar from '../components/PlayerAvatar';
+import ScreenSafeArea from '../components/ScreenSafeArea';
 import { formatDateWithYear } from '../utils/formatDate';
+import { resetGameFlowTo } from '../navigation/gameFlowHelpers';
 
 export default function GameEndScreen() {
   const { t, i18n } = useTranslation();
@@ -50,7 +51,7 @@ export default function GameEndScreen() {
   useEffect(() => {
     loadData();
     AdService.resetCounter();
-  }, []);
+  }, [gameId]);
 
   const loadData = async () => {
     const [g, playerList, isPremium] = await Promise.all([
@@ -68,7 +69,7 @@ export default function GameEndScreen() {
     setWinners(winnerIds.map((id) => gamePlayers.find((p) => p.id === id)).filter(Boolean));
 
     if (!isPremium) {
-      await AdService.showRewardedAd();
+      await AdService.showInterstitialAd();
     }
   };
 
@@ -96,7 +97,7 @@ export default function GameEndScreen() {
   const questionsDone = game?.rounds?.filter((r) => !r.skipped).length || 0;
 
   return (
-    <SafeAreaView style={Layout.screen}>
+    <ScreenSafeArea edges={['top', 'left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Shareable card captured by ViewShot */}
         <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 0.95 }}>
@@ -132,26 +133,14 @@ export default function GameEndScreen() {
             {/* Winner(s) */}
             {winners.length > 0 && totalShots > 0 && (
               <View style={styles.winnerCard}>
-                <Text style={styles.winnerCrown}>🥃</Text>
-                {winners.length === 1 ? (
-                  <>
-                    <Text style={styles.winnerEmoji}>{winners[0].emoji}</Text>
-                    <Text style={styles.winnerName}>{winners[0].name}</Text>
-                    <Text style={styles.winnerLabel}>{t('gameEnd.winner')}</Text>
-                  </>
-                ) : (
-                  <>
-                    <View style={styles.tieEmojiRow}>
-                      {winners.map((w) => (
-                        <Text key={w.id} style={styles.winnerEmoji}>{w.emoji}</Text>
-                      ))}
-                    </View>
-                    <Text style={styles.winnerLabel}>{t('gameEnd.winners')}</Text>
-                    <Text style={styles.winnerName}>
-                      {winners.map((w) => w.name).join(' & ')}
-                    </Text>
-                  </>
-                )}
+                <Text style={styles.winnerLabel}>
+                  {winners.length === 1 ? t('gameEnd.winner') : t('gameEnd.winners')}
+                </Text>
+                <Text style={styles.winnerName}>
+                  {winners.length === 1
+                    ? winners[0].name
+                    : winners.map((w) => w.name).join(' & ')}
+                </Text>
                 <Text style={styles.winnerShots}>
                   {t('gameEnd.winnerSubtitle')} · {t('gameEnd.mostShots', { count: shotCounts[winners[0].id] || 0 })}
                 </Text>
@@ -166,7 +155,7 @@ export default function GameEndScreen() {
               {sortedPlayers.map((player, i) => (
                 <View key={player.id} style={styles.scoreRow}>
                   <Text style={styles.scoreRank}>{i + 1}.</Text>
-                  <Text style={styles.scoreEmoji}>{player.emoji}</Text>
+                  <PlayerAvatar player={player} size="sm" />
                   <Text style={styles.scoreName}>{player.name}</Text>
                   <ShotBadge count={shotCounts[player.id] || 0} size="sm" variant="inline" />
                 </View>
@@ -195,7 +184,7 @@ export default function GameEndScreen() {
 
           <TouchableOpacity
             style={[Buttons.secondary, styles.newGameBtn]}
-            onPress={() => navigation.navigate('GameFlow', { screen: 'GameSetup' })}
+            onPress={() => resetGameFlowTo(navigation, 'GameSetup')}
             activeOpacity={0.85}
           >
             <Text style={Buttons.secondaryText}>{t('gameEnd.newGame')}</Text>
@@ -203,14 +192,14 @@ export default function GameEndScreen() {
 
           <TouchableOpacity
             style={Buttons.ghost}
-            onPress={() => navigation.navigate('MainTabs')}
+            onPress={() => navigation.getParent()?.goBack()}
             activeOpacity={0.85}
           >
             <Text style={Buttons.ghostText}>{t('gameEnd.backHome')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenSafeArea>
   );
 }
 
@@ -273,16 +262,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary + '66',
     gap: Spacing.xs,
   },
-  winnerCrown: {
-    fontSize: 28,
-  },
-  winnerEmoji: {
-    fontSize: 40,
-  },
-  tieEmojiRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
   winnerLabel: {
     ...Typography.caption,
     color: Colors.textSecondary,
@@ -290,7 +269,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   winnerName: {
-    ...Typography.h3,
+    ...Typography.h2,
     color: Colors.primary,
     textAlign: 'center',
   },
@@ -316,9 +295,6 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: Colors.textMuted,
     width: 20,
-  },
-  scoreEmoji: {
-    fontSize: 18,
   },
   scoreName: {
     ...Typography.bodySmall,

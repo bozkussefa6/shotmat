@@ -1,13 +1,11 @@
-// AdMob unit IDs — set via app config extra or env when ready for production.
-// No user/party data is sent to the ad SDK (KVKK).
+// AdMob — no user/party data sent to the ad SDK (KVKK).
+// Requires a development build; Expo Go cannot load native ads.
 
+import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 const extra = Constants.expoConfig?.extra || {};
-const AD_UNITS = {
-  interstitial: extra.admobInterstitialId || '',
-  rewarded: extra.admobRewardedId || '',
-};
+const isExpoGo = Constants.appOwnership === 'expo';
 
 const AD_FREQUENCY = 3;
 
@@ -25,10 +23,32 @@ const loadAdsModule = () => {
   }
 };
 
+const getProductionInterstitialId = () => {
+  if (Platform.OS === 'ios') {
+    return extra.admobInterstitialIdIos || extra.admobInterstitialId || '';
+  }
+  if (Platform.OS === 'android') {
+    return extra.admobInterstitialIdAndroid || '';
+  }
+  return '';
+};
+
+const getInterstitialUnitId = (TestIds) => {
+  if (__DEV__) return TestIds.INTERSTITIAL;
+  const productionId = getProductionInterstitialId();
+  return productionId || TestIds.INTERSTITIAL;
+};
+
+const isAdsAvailable = () => !isExpoGo && !!loadAdsModule();
+
 const initialize = async () => {
+  if (isExpoGo) {
+    console.log('[AdService] Expo Go — ads require a development build (expo run:ios)');
+    return;
+  }
   const ads = loadAdsModule();
-  if (!ads || !AD_UNITS.interstitial) {
-    console.log('[AdService] Initialized (mock — configure admobInterstitialId in app.json extra)');
+  if (!ads) {
+    console.log('[AdService] SDK not available');
     return;
   }
   try {
@@ -47,46 +67,31 @@ const shouldShowInterstitial = () =>
   questionCounter > 0 && questionCounter % AD_FREQUENCY === 0;
 
 const showInterstitialAd = async () => {
-  const ads = loadAdsModule();
-  if (!ads || !AD_UNITS.interstitial) {
-    console.log('[AdService] showInterstitialAd (mock)');
+  if (!isAdsAvailable()) {
+    console.log('[AdService] showInterstitialAd (unavailable)');
     return;
   }
+  const ads = loadAdsModule();
+  const { InterstitialAd, AdEventType, TestIds } = ads;
+  const unitId = getInterstitialUnitId(TestIds);
+
   try {
-    const { InterstitialAd, AdEventType, TestIds } = ads;
-    const ad = InterstitialAd.createForAdRequest(
-      AD_UNITS.interstitial || TestIds.INTERSTITIAL
-    );
-    await new Promise((resolve, reject) => {
-      ad.addAdEventListener(AdEventType.LOADED, () => ad.show());
-      ad.addAdEventListener(AdEventType.CLOSED, resolve);
-      ad.addAdEventListener(AdEventType.ERROR, reject);
+    const ad = InterstitialAd.createForAdRequest(unitId);
+    await new Promise((resolve) => {
+      const unsubscribes = [];
+      const finish = () => {
+        unsubscribes.forEach((unsub) => unsub());
+        resolve();
+      };
+      unsubscribes.push(
+        ad.addAdEventListener(AdEventType.LOADED, () => ad.show())
+      );
+      unsubscribes.push(ad.addAdEventListener(AdEventType.CLOSED, finish));
+      unsubscribes.push(ad.addAdEventListener(AdEventType.ERROR, finish));
       ad.load();
     });
   } catch (e) {
     console.log('[AdService] Interstitial error:', e?.message);
-  }
-};
-
-const showRewardedAd = async () => {
-  const ads = loadAdsModule();
-  if (!ads || !AD_UNITS.rewarded) {
-    console.log('[AdService] showRewardedAd (mock)');
-    return;
-  }
-  try {
-    const { RewardedAd, AdEventType, TestIds } = ads;
-    const ad = RewardedAd.createForAdRequest(
-      AD_UNITS.rewarded || TestIds.REWARDED
-    );
-    await new Promise((resolve, reject) => {
-      ad.addAdEventListener(AdEventType.LOADED, () => ad.show());
-      ad.addAdEventListener(AdEventType.CLOSED, resolve);
-      ad.addAdEventListener(AdEventType.ERROR, reject);
-      ad.load();
-    });
-  } catch (e) {
-    console.log('[AdService] Rewarded error:', e?.message);
   }
 };
 
@@ -99,9 +104,9 @@ const AdService = {
   incrementQuestionCounter,
   shouldShowInterstitial,
   showInterstitialAd,
-  showRewardedAd,
   resetCounter,
-  AD_UNITS,
+  isAdsAvailable,
+  getProductionInterstitialId,
 };
 
 export default AdService;

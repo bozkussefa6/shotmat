@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,398 +6,363 @@ import {
   Animated,
   Easing,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   Colors,
   Spacing,
   Typography,
-  BorderRadius,
   TypeColors,
 } from '../styles/GlobalStyles';
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
 import SoundService from '../services/SoundService';
+import { resetGameFlowTo } from '../navigation/gameFlowHelpers';
+import AppLogo from '../components/AppLogo';
+import ScreenSafeArea from '../components/ScreenSafeArea';
+import SlotReel from '../components/SlotReel';
 
-// Slot machine cycles through type labels before locking on the real type
-const getSlotLabels = (t) => [
+const SPIN_MS = 900;
+const TYPE_HOLD_MS = 1000;
+const CAPTION_FADE_MS = 250;
+const CAPTION_HOLD_MS = 1000;
+
+const getTypeLabels = (t) => [
   t('question.typeGroup'),
   t('question.typePersonal'),
   t('question.typeDare'),
 ];
 
+const TYPE_INDEX = { group: 0, personal: 1, dare: 2 };
+
 export default function QuestionTransitionScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
-  const { gameId, isFirst } = route.params || {};
+  const { gameId } = route.params || {};
 
   const [targetPlayer, setTargetPlayer] = useState(null);
   const [nextQuestion, setNextQuestion] = useState(null);
-  const [players, setPlayers] = useState([]);
-  const [phase, setPhase] = useState('spinning'); // 'spinning' | 'slot' | 'revealing'
-  const [slotLabel, setSlotLabel] = useState('');
+  const [playerNames, setPlayerNames] = useState([]);
+  const [phase, setPhase] = useState(0);
+  const [typeReelActive, setTypeReelActive] = useState(false);
+  const [playerReelActive, setPlayerReelActive] = useState(false);
+  const [showPlayerCaption, setShowPlayerCaption] = useState(false);
 
-  useEffect(() => {
-    setSlotLabel(getSlotLabels(t)[0]);
-  }, [t]);
-
-  // --- Core animations ---
   const spinAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const ringPulse = useRef(new Animated.Value(1)).current;
+  const ringOpacity = useRef(new Animated.Value(0.5)).current;
+  const spinPhaseOpacity = useRef(new Animated.Value(1)).current;
+  const typePhaseOpacity = useRef(new Animated.Value(0)).current;
+  const playerPhaseOpacity = useRef(new Animated.Value(0)).current;
+  const captionOpacity = useRef(new Animated.Value(0)).current;
 
-  // --- Glow ring ---
-  const glowScale = useRef(new Animated.Value(1)).current;
-  const glowOpacity = useRef(new Animated.Value(0.6)).current;
+  const targetRef = useRef(null);
+  const timersRef = useRef([]);
 
-  // --- Pulse ring (outer) ---
-  const pulseScale = useRef(new Animated.Value(0.8)).current;
-  const pulseOpacity = useRef(new Animated.Value(0)).current;
-
-  // --- Slot machine label ---
-  const slotOpacity = useRef(new Animated.Value(0)).current;
-  const slotScale = useRef(new Animated.Value(0.8)).current;
-
-  // --- Player reveal ---
-  const playerRevealAnim = useRef(new Animated.Value(0)).current;
-  const playerScaleAnim = useRef(new Animated.Value(1.05)).current;
-
-  const slotTimerRef = useRef(null);
-
-  useEffect(() => {
-    loadAndPrepare();
-    return () => {
-      if (slotTimerRef.current) clearInterval(slotTimerRef.current);
-    };
-  }, []);
-
-  const loadAndPrepare = async () => {
-    const [game, playerList] = await Promise.all([
-      StorageService.getGameById(gameId),
-      StorageService.getPlayers(),
-    ]);
-    if (!game) return;
-    setPlayers(playerList);
-
-    const question = GameService.getNextQuestion(game);
-    if (!question) {
-      await GameService.endGame(gameId);
-      navigation.replace('GameEnd', { gameId });
-      return;
-    }
-    setNextQuestion(question);
-
-    const lastRound = game.rounds[game.rounds.length - 1];
-    const lastTargetId = lastRound?.targetPlayerId || null;
-    const targetId = GameService.resolveTargetPlayer(question, game.playerIds, lastTargetId);
-    const target = targetId ? playerList.find((p) => p.id === targetId) : null;
-    setTargetPlayer(target);
-
-    startAnimation(target, question);
+  const clearTimers = () => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
   };
 
-  const startAnimation = (target, question) => {
-    const SPIN_DURATION = 1600;   // faz 1: spinning
-    const SLOT_DURATION = 500;    // faz 2: slot machine
-    const REVEAL_DELAY = target ? 600 : 0; // faz 3: player reveal
+  const schedule = (fn, delay) => {
+    const id = setTimeout(fn, delay);
+    timersRef.current.push(id);
+  };
 
-    const totalDuration = SPIN_DURATION + SLOT_DURATION + REVEAL_DELAY + 600;
-
-    // Navigate after all animations
-    setTimeout(() => {
-      navigation.replace('Question', { gameId, targetPlayerId: target?.id || null });
-    }, totalDuration);
-
-    // === SOUNDS ===
-    // Faz 1: rulet tiklamasi — daha sik tick (200ms), sinüs yerine kisa gürültü patlamasi (spin.wav)
-    const tickInterval = setInterval(() => SoundService.play('spin'), 200);
-    setTimeout(() => clearInterval(tickInterval), SPIN_DURATION);
-    // Faz 2: slot gecislerinde yavaslayan tiklar (rulet duruyor hissi)
-    const slotTickDelays = [80, 130, 180, 240, 300];
-    const fireSlotTick = (idx) => {
-      if (idx >= slotTickDelays.length) return;
-      setTimeout(() => {
-        SoundService.play('spin');
-        fireSlotTick(idx + 1);
-      }, slotTickDelays[idx]);
-    };
-    setTimeout(() => fireSlotTick(0), SPIN_DURATION);
-    // Soru tipi netlesince ding
-    setTimeout(() => SoundService.play('reveal'), SPIN_DURATION + SLOT_DURATION);
-
-    // === FAZ 1: Spinning (0 → 1600ms) ===
-
-    // Entrance pop
+  const crossfadeTo = (from, to) => {
     Animated.parallel([
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
+      Animated.timing(from, { toValue: 0, duration: 250, useNativeDriver: true }),
+      Animated.timing(to, { toValue: 1, duration: 250, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const navigateToQuestion = useCallback(
+    (targetId) => {
+      navigation.replace('Question', { gameId, targetPlayerId: targetId || null });
+    },
+    [navigation, gameId]
+  );
+
+  const needsPlayerReel = useCallback((target, question) => {
+    return (
+      target &&
+      question &&
+      (question.type === 'personal' || question.type === 'dare')
+    );
+  }, []);
+
+  const beginTypeReel = useCallback(() => {
+    setPhase(1);
+    crossfadeTo(spinPhaseOpacity, typePhaseOpacity);
+    setTypeReelActive(true);
+  }, [spinPhaseOpacity, typePhaseOpacity]);
+
+  const handleTypeReelComplete = useCallback(
+    (question) => {
+      SoundService.play('reveal');
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      if (needsPlayerReel(targetRef.current, question)) {
+        schedule(() => {
+          setTypeReelActive(false);
+          setPhase(2);
+          crossfadeTo(typePhaseOpacity, playerPhaseOpacity);
+          setPlayerReelActive(true);
+        }, 180);
+      } else {
+        schedule(() => navigateToQuestion(null), TYPE_HOLD_MS);
+      }
+    },
+    [needsPlayerReel, typePhaseOpacity, playerPhaseOpacity, navigateToQuestion]
+  );
+
+  const handlePlayerReelComplete = useCallback(() => {
+    SoundService.play('reveal');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowPlayerCaption(true);
+    Animated.timing(captionOpacity, {
+      toValue: 1,
+      duration: CAPTION_FADE_MS,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (!finished) return;
+      schedule(
+        () => navigateToQuestion(targetRef.current?.id || null),
+        CAPTION_HOLD_MS
+      );
+    });
+  }, [captionOpacity, navigateToQuestion]);
+
+  const startAnimation = useCallback(() => {
+    const spinTickInterval = setInterval(() => SoundService.play('spin'), 150);
+    schedule(() => clearInterval(spinTickInterval), SPIN_MS);
+
+    Animated.parallel([
       Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 5,
         tension: 80,
         useNativeDriver: true,
       }),
-    ]).start();
-
-    // Continuous spin (4 full rotations in 1600ms)
-    Animated.loop(
       Animated.timing(spinAnim, {
         toValue: 1,
-        duration: 400,
-        easing: Easing.linear,
+        duration: SPIN_MS,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
-      { iterations: 4 }
-    ).start();
+    ]).start();
 
-    // Pulsing glow ring
     Animated.loop(
       Animated.sequence([
         Animated.parallel([
-          Animated.timing(glowScale, {
-            toValue: 1.25,
-            duration: 350,
-            easing: Easing.out(Easing.ease),
+          Animated.timing(ringPulse, {
+            toValue: 1.08,
+            duration: 450,
+            easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
-          Animated.timing(glowOpacity, {
-            toValue: 0.2,
-            duration: 350,
+          Animated.timing(ringOpacity, {
+            toValue: 0.85,
+            duration: 450,
             useNativeDriver: true,
           }),
         ]),
         Animated.parallel([
-          Animated.timing(glowScale, {
+          Animated.timing(ringPulse, {
             toValue: 1,
-            duration: 350,
-            easing: Easing.in(Easing.ease),
+            duration: 450,
+            easing: Easing.inOut(Easing.ease),
             useNativeDriver: true,
           }),
-          Animated.timing(glowOpacity, {
-            toValue: 0.6,
-            duration: 350,
+          Animated.timing(ringOpacity, {
+            toValue: 0.45,
+            duration: 450,
             useNativeDriver: true,
           }),
         ]),
-      ]),
-      { iterations: -1 }
+      ])
     ).start();
 
-    // Expanding pulse ring (fires every ~500ms)
-    const firePulse = () => {
-      pulseScale.setValue(0.8);
-      pulseOpacity.setValue(0.7);
-      Animated.parallel([
-        Animated.timing(pulseScale, {
-          toValue: 2.2,
-          duration: 700,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseOpacity, {
-          toValue: 0,
-          duration: 700,
-          useNativeDriver: true,
-        }),
-      ]).start();
+    schedule(beginTypeReel, SPIN_MS);
+  }, [scaleAnim, spinAnim, ringPulse, ringOpacity, beginTypeReel]);
+
+  useEffect(() => {
+    const loadAndPrepare = async () => {
+      const [game, playerList] = await Promise.all([
+        StorageService.getGameById(gameId),
+        StorageService.getPlayers(),
+      ]);
+      if (!game) return;
+
+      const question = GameService.getNextQuestion(game);
+      if (!question) {
+        await GameService.endGame(gameId);
+        resetGameFlowTo(navigation, 'GameEnd', { gameId });
+        return;
+      }
+
+      const lastRound = game.rounds[game.rounds.length - 1];
+      const lastTargetId = lastRound?.targetPlayerId || null;
+      const targetId = GameService.resolveTargetPlayer(
+        question,
+        game.playerIds,
+        lastTargetId
+      );
+      const target = targetId
+        ? playerList.find((p) => p.id === targetId)
+        : null;
+
+      const names = game.playerIds
+        .map((id) => playerList.find((p) => p.id === id))
+        .filter((p) => p && !p.deleted)
+        .map((p) => p.name);
+
+      targetRef.current = target;
+      setNextQuestion(question);
+      setTargetPlayer(target);
+      setPlayerNames(names);
+      startAnimation();
     };
-    firePulse();
-    const pulseInterval = setInterval(firePulse, 500);
-    setTimeout(() => clearInterval(pulseInterval), SPIN_DURATION);
 
-    // === FAZ 2: Slot Machine (1600ms → 2100ms) ===
-    setTimeout(() => {
-      if (slotTimerRef.current) clearInterval(slotTimerRef.current);
-      setPhase('slot');
-
-      const slotLabels = getSlotLabels(t);
-      const typeLabel = question
-        ? t(`question.type${question.type.charAt(0).toUpperCase() + question.type.slice(1)}`)
-        : slotLabels[0];
-
-      let idx = 0;
-      let ticks = 0;
-      const maxTicks = 6;
-
-      slotOpacity.setValue(0);
-      slotScale.setValue(0.7);
-      Animated.parallel([
-        Animated.timing(slotOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
-        Animated.spring(slotScale, { toValue: 1, friction: 6, useNativeDriver: true }),
-      ]).start();
-
-      slotTimerRef.current = setInterval(() => {
-        ticks++;
-        const remaining = maxTicks - ticks;
-        const nextLabel = remaining <= 0 ? typeLabel : slotLabels[ticks % slotLabels.length];
-
-        // Quick flash out/in for tick feel
-        Animated.sequence([
-          Animated.timing(slotOpacity, { toValue: 0, duration: 40, useNativeDriver: true }),
-          Animated.timing(slotOpacity, { toValue: 1, duration: 40, useNativeDriver: true }),
-        ]).start();
-
-        setSlotLabel(nextLabel);
-
-        if (remaining <= 0) {
-          clearInterval(slotTimerRef.current);
-          // Final settle bounce
-          Animated.sequence([
-            Animated.timing(slotScale, { toValue: 1.15, duration: 120, easing: Easing.out(Easing.ease), useNativeDriver: true }),
-            Animated.timing(slotScale, { toValue: 1, duration: 100, useNativeDriver: true }),
-          ]).start();
-        }
-      }, SLOT_DURATION / maxTicks);
-    }, SPIN_DURATION);
-
-    // === FAZ 3: Player reveal (after slot) ===
-    if (target) {
-      setTimeout(() => {
-        setPhase('revealing');
-        Animated.parallel([
-          Animated.spring(playerRevealAnim, {
-            toValue: 1,
-            friction: 6,
-            tension: 80,
-            useNativeDriver: true,
-          }),
-          Animated.timing(playerScaleAnim, {
-            toValue: 1,
-            duration: 300,
-            easing: Easing.out(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ]).start();
-      }, SPIN_DURATION + SLOT_DURATION);
-    }
-  };
+    loadAndPrepare();
+    return clearTimers;
+  }, [gameId, navigation, startAnimation]);
 
   const spin = spinAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
+    outputRange: ['0deg', '720deg'],
   });
 
-  const typeColor = nextQuestion ? TypeColors[nextQuestion.type] || Colors.primary : Colors.primary;
-  const slotColor = phase === 'slot' && nextQuestion ? TypeColors[nextQuestion.type] || Colors.primary : Colors.textSecondary;
+  const typeColor = nextQuestion
+    ? TypeColors[nextQuestion.type] || Colors.primary
+    : Colors.primary;
+
+  const typeLabels = getTypeLabels(t);
+  const typeFinalIndex = nextQuestion
+    ? TYPE_INDEX[nextQuestion.type] ?? 0
+    : 0;
+
+  const playerFinalIndex =
+    targetPlayer && playerNames.length
+      ? Math.max(0, playerNames.findIndex((name) => name === targetPlayer.name))
+      : 0;
+
+  const handleTypeTick = (isLast) => {
+    SoundService.play('spin');
+    if (!isLast) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const handlePlayerTick = (isLast) => {
+    SoundService.play('spin');
+    if (!isLast) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const dotActive = (index) => {
+    if (index === 0) return phase >= 0;
+    if (index === 1) return phase >= 1;
+    if (index === 2) {
+      if (!needsPlayerReel(targetPlayer, nextQuestion)) return phase >= 1;
+      return phase >= 2;
+    }
+    return false;
+  };
 
   return (
-    <View style={styles.container}>
-
-      {/* Outer expanding pulse ring */}
-      <Animated.View
-        style={[
-          styles.pulseRing,
-          {
-            borderColor: Colors.primary + '99',
-            opacity: pulseOpacity,
-            transform: [{ scale: pulseScale }],
-          },
-        ]}
-        pointerEvents="none"
-      />
-
-      {/* Glow ring */}
-      <Animated.View
-        style={[
-          styles.glowRing,
-          {
-            borderColor: Colors.primary,
-            opacity: glowOpacity,
-            transform: [{ scale: glowScale }],
-          },
-        ]}
-        pointerEvents="none"
-      />
-
-      {/* Central spinning icon */}
-      <Animated.View
-        style={[
-          styles.iconContainer,
-          {
-            opacity: opacityAnim,
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
-      >
-        <Animated.View style={{ transform: [{ rotate: spin }] }}>
-          <MaterialCommunityIcons name="cup" size={72} color={Colors.primary} />
-        </Animated.View>
-      </Animated.View>
-
-      {/* Phase 1 label */}
-      {phase === 'spinning' && (
-        <Animated.Text style={[styles.selectingText, { opacity: opacityAnim }]}>
-          {t('questionTransition.selecting')}
-        </Animated.Text>
-      )}
-
-      {/* Phase 2: Slot machine label */}
-      {phase === 'slot' && (
-        <Animated.Text
-          style={[
-            styles.slotLabel,
-            {
-              color: slotColor,
-              opacity: slotOpacity,
-              transform: [{ scale: slotScale }],
-            },
-          ]}
-        >
-          {slotLabel}
-        </Animated.Text>
-      )}
-
-      {/* Phase 3: Player reveal */}
-      {phase === 'revealing' && targetPlayer && (
+    <ScreenSafeArea>
+      <View style={styles.container}>
         <Animated.View
           style={[
-            styles.playerReveal,
+            styles.centerStack,
             {
-              opacity: playerRevealAnim,
-              transform: [
-                {
-                  translateY: playerRevealAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [40, 0],
-                  }),
-                },
-                { scale: playerScaleAnim },
-              ],
+              opacity: spinPhaseOpacity,
+              transform: [{ scale: scaleAnim }],
             },
           ]}
+          pointerEvents="none"
         >
-          <View style={[styles.playerRevealCard, { borderColor: typeColor }]}>
-            <Text style={styles.playerEmoji}>{targetPlayer.emoji}</Text>
-            <Text style={[styles.playerRevealText, { color: typeColor }]}>
-              {t('questionTransition.questionFor', { player: targetPlayer.name })}
-            </Text>
+          <Animated.View
+            style={[
+              styles.ring,
+              {
+                borderColor: Colors.primary,
+                opacity: ringOpacity,
+                transform: [{ scale: ringPulse }],
+              },
+            ]}
+          />
+          <View style={[styles.iconContainer, { borderColor: Colors.primary }]}>
+            <Animated.View style={{ transform: [{ rotate: spin }] }}>
+              <AppLogo size="sm" />
+            </Animated.View>
           </View>
         </Animated.View>
-      )}
 
-      {/* Type badge (bottom) */}
-      {nextQuestion && phase !== 'spinning' && (
         <Animated.View
-          style={[
-            styles.typeBadge,
-            {
-              backgroundColor: typeColor + '22',
-              borderColor: typeColor,
-              opacity: opacityAnim,
-            },
-          ]}
+          style={[styles.reelStack, { opacity: typePhaseOpacity }]}
+          pointerEvents="none"
         >
-          <Text style={[styles.typeText, { color: typeColor }]}>
-            {t(`question.type${nextQuestion.type.charAt(0).toUpperCase() + nextQuestion.type.slice(1)}`)}
-          </Text>
+          {nextQuestion && (
+            <SlotReel
+              items={typeLabels}
+              finalIndex={typeFinalIndex}
+              active={typeReelActive}
+              accentColor={typeColor}
+              onTick={handleTypeTick}
+              onComplete={() => handleTypeReelComplete(nextQuestion)}
+              itemHeight={52}
+              fontSize={20}
+            />
+          )}
         </Animated.View>
-      )}
-    </View>
+
+        <Animated.View
+          style={[styles.reelStack, { opacity: playerPhaseOpacity }]}
+          pointerEvents="none"
+        >
+          {playerNames.length > 0 && (
+            <SlotReel
+              items={playerNames}
+              finalIndex={playerFinalIndex}
+              active={playerReelActive}
+              accentColor={typeColor}
+              onTick={handlePlayerTick}
+              onComplete={handlePlayerReelComplete}
+              itemHeight={52}
+              fontSize={22}
+            />
+          )}
+          {showPlayerCaption && targetPlayer && (
+            <Animated.Text
+              style={[
+                styles.playerCaption,
+                { color: typeColor, opacity: captionOpacity },
+              ]}
+            >
+              {t('questionTransition.questionFor', { player: targetPlayer.name })}
+            </Animated.Text>
+          )}
+        </Animated.View>
+
+        <View style={styles.footer}>
+          <Text style={styles.selectingText}>{t('questionTransition.selecting')}</Text>
+          <View style={styles.dots}>
+            {[0, 1, 2].map((i) => (
+              <View
+                key={i}
+                style={[styles.dot, dotActive(i) && styles.dotActive]}
+              />
+            ))}
+          </View>
+        </View>
+      </View>
+    </ScreenSafeArea>
   );
 }
 
@@ -409,21 +374,18 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.xl,
   },
-  pulseRing: {
+  ring: {
     position: 'absolute',
     width: RING_SIZE,
     height: RING_SIZE,
     borderRadius: RING_SIZE / 2,
     borderWidth: 2,
   },
-  glowRing: {
+  centerStack: {
     position: 'absolute',
-    width: RING_SIZE,
-    height: RING_SIZE,
-    borderRadius: RING_SIZE / 2,
-    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   iconContainer: {
     width: RING_SIZE,
@@ -433,47 +395,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: Colors.primary,
   },
-  selectingText: {
-    ...Typography.h3,
-    color: Colors.textSecondary,
-    letterSpacing: 1,
-  },
-  slotLabel: {
-    ...Typography.h2,
-    letterSpacing: 3,
-    fontWeight: '800',
-  },
-  playerReveal: {
+  reelStack: {
+    position: 'absolute',
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
-  playerRevealCard: {
-    backgroundColor: Colors.card,
-    borderRadius: BorderRadius.xl,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.lg,
+  footer: {
+    position: 'absolute',
+    bottom: 80,
     alignItems: 'center',
-    borderWidth: 2,
     gap: Spacing.sm,
   },
-  playerEmoji: {
-    fontSize: 40,
+  selectingText: {
+    ...Typography.bodySmall,
+    color: Colors.textMuted,
+    letterSpacing: 0.5,
   },
-  playerRevealText: {
+  dots: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.border,
+  },
+  dotActive: {
+    backgroundColor: Colors.primary,
+  },
+  playerCaption: {
     ...Typography.h3,
     textAlign: 'center',
-  },
-  typeBadge: {
-    position: 'absolute',
-    bottom: 60,
+    marginTop: Spacing.lg,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-  },
-  typeText: {
-    ...Typography.button,
-    letterSpacing: 2,
   },
 });

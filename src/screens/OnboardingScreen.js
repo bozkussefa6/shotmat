@@ -25,6 +25,8 @@ import {
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
 import AppLogo from '../components/AppLogo';
+import { getAvatarColor } from '../utils/playerAvatar';
+import { isDuplicatePlayerName } from '../utils/playerNames';
 
 export default function OnboardingScreen({ onDone }) {
   const { t } = useTranslation();
@@ -41,12 +43,17 @@ export default function OnboardingScreen({ onDone }) {
       Alert.alert(t('common.error'), t('onboarding.kvkkRequired'));
       return;
     }
+    const existingPlayers = await StorageService.getPlayers();
+    if (isDuplicatePlayerName(name, existingPlayers)) {
+      Alert.alert(t('common.error'), t('players.nameTaken'));
+      return;
+    }
     setLoading(true);
     try {
       const mainUser = {
         id: GameService.generateId(),
         name: name.trim(),
-        emoji: '🙋',
+        color: getAvatarColor(name.trim()),
         isMainUser: true,
         createdAt: new Date().toISOString(),
       };
@@ -72,7 +79,7 @@ export default function OnboardingScreen({ onDone }) {
         >
           {/* Logo area */}
           <View style={styles.logoContainer}>
-            <AppLogo size="lg" showName />
+            <AppLogo size="lg" />
             <Text style={styles.tagline}>{t('onboarding.welcome')}</Text>
             <Text style={styles.subtitle}>{t('onboarding.subtitle')}</Text>
             <Text style={styles.valueProp}>{t('onboarding.valueProp')}</Text>

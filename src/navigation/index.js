@@ -93,7 +93,7 @@ function MainTabs() {
         tabBarIcon: ({ color, size }) => {
           const icons = {
             Home: 'home',
-            Parties: 'glass-cocktail',
+            Parties: 'history',
             Stats: 'chart-bar',
             Profile: 'account',
           };
@@ -133,13 +133,22 @@ function MainTabs() {
 
 function GameFlow() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: Colors.background },
+      }}
+    >
       <Stack.Screen name="GameSetup" component={GameSetupScreen} />
       <Stack.Screen name="QuestionTransition" component={QuestionTransitionScreen} />
       <Stack.Screen name="Question" component={QuestionScreen} />
       <Stack.Screen name="Evaluation" component={EvaluationScreen} />
       <Stack.Screen name="GameStatus" component={GameStatusScreen} />
-      <Stack.Screen name="GameEnd" component={GameEndScreen} />
+      <Stack.Screen
+        name="GameEnd"
+        component={GameEndScreen}
+        options={{ gestureEnabled: false }}
+      />
     </Stack.Navigator>
   );
 }
@@ -163,7 +172,7 @@ export function AppNavigator() {
       <RootStack.Screen
         name="GameFlow"
         component={GameFlow}
-        options={{ presentation: 'fullScreenModal' }}
+        options={{ presentation: 'fullScreenModal', unmountOnBlur: true }}
       />
       <RootStack.Screen
         name="PremiumModal"

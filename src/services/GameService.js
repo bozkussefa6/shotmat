@@ -7,7 +7,7 @@ const generateId = () =>
 const normalizeQuestion = (q) => ({
   ...q,
   tr: q.tr || q.textTr || '',
-  en: q.en || q.textEn || q.textTr || '',
+  en: q.en || q.textEn || '',
   type: q.type,
 });
 

@@ -21,6 +21,7 @@ import {
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
 import ShotBadge from '../components/ShotBadge';
+import PlayerAvatar from '../components/PlayerAvatar';
 
 import { formatDateWithYear, formatDate } from '../utils/formatDate';
 
@@ -74,9 +75,9 @@ export default function GameHistoryScreen() {
           <ShotBadge count={totalShots} size="sm" />
         </View>
 
-        <View style={styles.emojiRow}>
+        <View style={styles.avatarRow}>
           {gamePlayers.slice(0, 6).map((p) => (
-            <Text key={p.id} style={styles.playerEmoji}>{p.emoji}</Text>
+            <PlayerAvatar key={p.id} player={p} size="xs" />
           ))}
           {gamePlayers.length > 6 && (
             <Text style={styles.moreText}>+{gamePlayers.length - 6}</Text>
@@ -189,13 +190,10 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: Colors.textSecondary,
   },
-  emojiRow: {
+  avatarRow: {
     flexDirection: 'row',
     gap: 4,
     alignItems: 'center',
-  },
-  playerEmoji: {
-    fontSize: 22,
   },
   moreText: {
     ...Typography.caption,

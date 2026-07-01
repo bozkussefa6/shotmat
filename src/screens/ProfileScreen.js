@@ -9,7 +9,6 @@ import {
   TextInput,
   Alert,
   Modal,
-  FlatList,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -22,15 +21,13 @@ import {
   BorderRadius,
   Layout,
   Buttons,
+  AvatarColors,
 } from '../styles/GlobalStyles';
-
-const EMOJIS = [
-  '🙋', '😎', '🤩', '😈', '🦊', '🐺', '🦁', '🐯', '🌚', '🌝',
-  '🤠', '🥳', '😏', '🤑', '😜', '🤪', '🥴', '😤', '🙃', '😇',
-  '👻', '🤖', '👽', '🎭', '🧙', '🧛', '🧟', '🦸', '🦹', '🐸',
-];
 import StorageService from '../services/StorageService';
 import PremiumService from '../services/PremiumService';
+import PlayerAvatar from '../components/PlayerAvatar';
+import { getAvatarColor } from '../utils/playerAvatar';
+import { isDuplicatePlayerName } from '../utils/playerNames';
 
 const MenuItem = ({ icon, label, description, onPress, accent }) => (
   <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.8}>
@@ -52,7 +49,7 @@ export default function ProfileScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [isPremium, setIsPremium] = useState(false);
-  const [emojiModalVisible, setEmojiModalVisible] = useState(false);
+  const [colorModalVisible, setColorModalVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -71,6 +68,11 @@ export default function ProfileScreen() {
 
   const handleSaveName = async () => {
     if (!nameInput.trim()) return;
+    const allPlayers = await StorageService.getPlayers();
+    if (isDuplicatePlayerName(nameInput, allPlayers, mainUser.id)) {
+      Alert.alert(t('common.error'), t('players.nameTaken'));
+      return;
+    }
     const updated = { ...mainUser, name: nameInput.trim() };
     await StorageService.saveMainUser(updated);
     await StorageService.updatePlayer(mainUser.id, { name: nameInput.trim() });
@@ -78,12 +80,12 @@ export default function ProfileScreen() {
     setEditingName(false);
   };
 
-  const handleSelectEmoji = async (emoji) => {
-    const updated = { ...mainUser, emoji };
+  const handleSelectColor = async (color) => {
+    const updated = { ...mainUser, color };
     await StorageService.saveMainUser(updated);
-    await StorageService.updatePlayer(mainUser.id, { emoji });
+    await StorageService.updatePlayer(mainUser.id, { color });
     setMainUser(updated);
-    setEmojiModalVisible(false);
+    setColorModalVisible(false);
   };
 
   return (
@@ -91,11 +93,10 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.headerTitle}>{t('profile.title')}</Text>
 
-        {/* User card */}
         <View style={styles.userCard}>
-          <TouchableOpacity onPress={() => setEmojiModalVisible(true)} activeOpacity={0.7}>
-            <Text style={styles.userEmoji}>{mainUser?.emoji || '🙋'}</Text>
-            <View style={styles.emojiEditBadge}>
+          <TouchableOpacity onPress={() => setColorModalVisible(true)} activeOpacity={0.7}>
+            <PlayerAvatar player={mainUser} size="xl" />
+            <View style={styles.avatarEditBadge}>
               <MaterialCommunityIcons name="pencil" size={10} color={Colors.background} />
             </View>
           </TouchableOpacity>
@@ -114,10 +115,7 @@ export default function ProfileScreen() {
               <TouchableOpacity style={styles.saveBtn} onPress={handleSaveName}>
                 <MaterialCommunityIcons name="check" size={20} color={Colors.background} />
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => setEditingName(false)}
-              >
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setEditingName(false)}>
                 <MaterialCommunityIcons name="close" size={20} color={Colors.textSecondary} />
               </TouchableOpacity>
             </View>
@@ -141,7 +139,6 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* Menu */}
         <View style={styles.menuSection}>
           <MenuItem
             icon="account-group"
@@ -177,34 +174,31 @@ export default function ProfileScreen() {
       </ScrollView>
 
       <Modal
-        visible={emojiModalVisible}
+        visible={colorModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setEmojiModalVisible(false)}
+        onRequestClose={() => setColorModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.emojiModal}>
-            <Text style={styles.emojiModalTitle}>{t('profile.changeEmoji')}</Text>
-            <FlatList
-              data={EMOJIS}
-              keyExtractor={(item) => item}
-              numColumns={6}
-              renderItem={({ item }) => (
+          <View style={styles.colorModal}>
+            <Text style={styles.colorModalTitle}>{t('profile.changeEmoji')}</Text>
+            <Text style={styles.colorModalSub}>{t('profile.pickColor')}</Text>
+            <View style={styles.colorGrid}>
+              {AvatarColors.map((color) => (
                 <TouchableOpacity
+                  key={color}
                   style={[
-                    styles.emojiOption,
-                    mainUser?.emoji === item && styles.emojiOptionActive,
+                    styles.colorSwatch,
+                    { backgroundColor: color },
+                    mainUser?.color === color && styles.colorSwatchActive,
                   ]}
-                  onPress={() => handleSelectEmoji(item)}
-                >
-                  <Text style={styles.emojiOptionText}>{item}</Text>
-                </TouchableOpacity>
-              )}
-              contentContainerStyle={styles.emojiGrid}
-            />
+                  onPress={() => handleSelectColor(color)}
+                />
+              ))}
+            </View>
             <TouchableOpacity
-              style={[Buttons.secondary, styles.emojiCancelBtn]}
-              onPress={() => setEmojiModalVisible(false)}
+              style={[Buttons.secondary, styles.colorCancelBtn]}
+              onPress={() => setColorModalVisible(false)}
             >
               <Text style={Buttons.secondaryText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
@@ -236,13 +230,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
     gap: Spacing.sm,
   },
-  userEmoji: {
-    fontSize: 52,
-  },
-  emojiEditBadge: {
+  avatarEditBadge: {
     position: 'absolute',
     bottom: 0,
-    right: 0,
+    right: -4,
     backgroundColor: Colors.primary,
     borderRadius: BorderRadius.full,
     width: 18,
@@ -255,38 +246,41 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.overlay,
     justifyContent: 'flex-end',
   },
-  emojiModal: {
+  colorModal: {
     backgroundColor: Colors.surface,
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
     padding: Spacing.lg,
     paddingBottom: Spacing.xxl,
   },
-  emojiModalTitle: {
+  colorModalTitle: {
     ...Typography.h3,
     textAlign: 'center',
+    marginBottom: Spacing.xs,
+  },
+  colorModalSub: {
+    ...Typography.caption,
+    textAlign: 'center',
+    color: Colors.textMuted,
     marginBottom: Spacing.md,
   },
-  emojiGrid: {
-    paddingBottom: Spacing.md,
-  },
-  emojiOption: {
-    flex: 1,
-    aspectRatio: 1,
-    alignItems: 'center',
+  colorGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    borderRadius: BorderRadius.md,
-    margin: 4,
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
   },
-  emojiOptionActive: {
-    backgroundColor: Colors.primary + '33',
-    borderWidth: 2,
+  colorSwatch: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  colorSwatchActive: {
+    borderWidth: 3,
     borderColor: Colors.primary,
   },
-  emojiOptionText: {
-    fontSize: 28,
-  },
-  emojiCancelBtn: {
+  colorCancelBtn: {
     marginTop: Spacing.sm,
   },
   nameRow: {

@@ -20,6 +20,7 @@ import {
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
 import ShotBadge from '../components/ShotBadge';
+import PlayerAvatar from '../components/PlayerAvatar';
 
 import { formatDate } from '../utils/formatDate';
 
@@ -114,7 +115,7 @@ export default function StatsScreen() {
             <View key={player.id} style={styles.playerCard}>
               <View style={styles.playerCardTop}>
                 <Text style={styles.rankBadge}>#{index + 1}</Text>
-                <Text style={styles.playerEmoji}>{player.emoji}</Text>
+                <PlayerAvatar player={player} size="sm" />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.playerName}>
                     {player.name}
@@ -132,7 +133,7 @@ export default function StatsScreen() {
                   <View style={styles.metaStat}>
                     <MaterialCommunityIcons name="heart" size={12} color={Colors.textMuted} />
                     <Text style={styles.metaStatText}>
-                      {t('stats.mostPlayedWith')}: {mostWith.emoji} {mostWith.name}
+                      {t('stats.mostPlayedWith')}: {mostWith.name}
                     </Text>
                   </View>
                 )}

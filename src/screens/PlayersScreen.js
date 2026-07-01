@@ -21,12 +21,14 @@ import {
   BorderRadius,
   Buttons,
   Layout,
+  AvatarColors,
 } from '../styles/GlobalStyles';
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
 import ScreenHeader from '../components/ScreenHeader';
-
-const EMOJIS = ['🙋','😎','🤩','😈','🦊','🐺','🦁','🐯','🌚','🌝','🎭','🤠','🧙','🐉','🦋','🌈','⚡','🔥','💀','🎯'];
+import PlayerAvatar from '../components/PlayerAvatar';
+import { getAvatarColor } from '../utils/playerAvatar';
+import { isDuplicatePlayerName } from '../utils/playerNames';
 
 export default function PlayersScreen() {
   const { t } = useTranslation();
@@ -36,7 +38,7 @@ export default function PlayersScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState(null);
   const [nameInput, setNameInput] = useState('');
-  const [selectedEmoji, setSelectedEmoji] = useState('😎');
+  const [selectedColor, setSelectedColor] = useState(AvatarColors[0]);
 
   useFocusEffect(
     useCallback(() => {
@@ -58,29 +60,33 @@ export default function PlayersScreen() {
   const openAdd = () => {
     setEditingPlayer(null);
     setNameInput('');
-    setSelectedEmoji(EMOJIS[Math.floor(Math.random() * EMOJIS.length)]);
+    setSelectedColor(AvatarColors[Math.floor(Math.random() * AvatarColors.length)]);
     setModalVisible(true);
   };
 
   const openEdit = (player) => {
     setEditingPlayer(player);
     setNameInput(player.name);
-    setSelectedEmoji(player.emoji);
+    setSelectedColor(player.color || getAvatarColor(player.name));
     setModalVisible(true);
   };
 
   const handleSave = async () => {
     if (!nameInput.trim()) return;
+    if (isDuplicatePlayerName(nameInput, players, editingPlayer?.id)) {
+      Alert.alert(t('common.error'), t('players.nameTaken'));
+      return;
+    }
     if (editingPlayer) {
       await StorageService.updatePlayer(editingPlayer.id, {
         name: nameInput.trim(),
-        emoji: selectedEmoji,
+        color: selectedColor,
       });
     } else {
       await StorageService.addPlayer({
         id: GameService.generateId(),
         name: nameInput.trim(),
-        emoji: selectedEmoji,
+        color: selectedColor,
         isMainUser: false,
         createdAt: new Date().toISOString(),
       });
@@ -112,7 +118,7 @@ export default function PlayersScreen() {
     const st = playerStats[player.id] || {};
     return (
       <View style={styles.playerCard}>
-        <Text style={styles.playerEmoji}>{player.emoji}</Text>
+        <PlayerAvatar player={player} size="md" />
         <View style={{ flex: 1 }}>
           <Text style={styles.playerName}>
             {player.name}
@@ -156,7 +162,6 @@ export default function PlayersScreen() {
         }
       />
 
-      {/* Add/Edit Modal */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
@@ -164,16 +169,24 @@ export default function PlayersScreen() {
               {editingPlayer ? t('players.editPlayer') : t('players.addNew')}
             </Text>
 
-            {/* Emoji picker */}
-            <View style={styles.emojiGrid}>
-              {EMOJIS.map((emoji) => (
+            <View style={styles.previewRow}>
+              <PlayerAvatar
+                player={{ name: nameInput || '?', color: selectedColor }}
+                size="lg"
+              />
+            </View>
+
+            <View style={styles.colorGrid}>
+              {AvatarColors.map((color) => (
                 <TouchableOpacity
-                  key={emoji}
-                  style={[styles.emojiCell, selectedEmoji === emoji && styles.emojiCellSelected]}
-                  onPress={() => setSelectedEmoji(emoji)}
-                >
-                  <Text style={styles.emojiText}>{emoji}</Text>
-                </TouchableOpacity>
+                  key={color}
+                  style={[
+                    styles.colorSwatch,
+                    { backgroundColor: color },
+                    selectedColor === color && styles.colorSwatchActive,
+                  ]}
+                  onPress={() => setSelectedColor(color)}
+                />
               ))}
             </View>
 
@@ -182,7 +195,12 @@ export default function PlayersScreen() {
               placeholder={t('players.namePlaceholder')}
               placeholderTextColor={Colors.textMuted}
               value={nameInput}
-              onChangeText={setNameInput}
+              onChangeText={(text) => {
+                setNameInput(text);
+                if (!editingPlayer && text.trim()) {
+                  setSelectedColor(getAvatarColor(text.trim()));
+                }
+              }}
               autoCapitalize="words"
               maxLength={25}
               returnKeyType="done"
@@ -211,14 +229,6 @@ export default function PlayersScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-  },
-  backBtn: { padding: Spacing.xs },
-  headerTitle: { ...Typography.h3, flex: 1, marginLeft: Spacing.sm },
   addBtn: { padding: Spacing.xs },
   list: {
     paddingHorizontal: Spacing.md,
@@ -235,7 +245,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     gap: Spacing.sm,
   },
-  playerEmoji: { fontSize: 26 },
   playerName: { ...Typography.bodyMedium },
   playerMeta: { ...Typography.caption, color: Colors.textMuted },
   editBtn: { padding: Spacing.xs },
@@ -254,24 +263,25 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   modalTitle: { ...Typography.h3, textAlign: 'center' },
-  emojiGrid: {
+  previewRow: {
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  colorGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.xs,
+    gap: Spacing.sm,
     justifyContent: 'center',
   },
-  emojiCell: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.md,
-    backgroundColor: Colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'transparent',
+  colorSwatch: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
-  emojiCellSelected: { borderColor: Colors.primary },
-  emojiText: { fontSize: 22 },
+  colorSwatchActive: {
+    borderWidth: 3,
+    borderColor: Colors.primary,
+  },
   nameInput: {
     backgroundColor: Colors.card,
     borderRadius: BorderRadius.md,
