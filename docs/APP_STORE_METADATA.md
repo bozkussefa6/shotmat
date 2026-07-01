@@ -36,7 +36,7 @@ parti,shot,oyun,drinking,truth,dare,arkadaş,grup,içki,eğlence
 ### Support URL
 https://shotmat.app/support
 
-Alternatif: mailto:support@shotmat.app
+Alternatif: mailto:scetere2025@gmail.com
 
 ---
 

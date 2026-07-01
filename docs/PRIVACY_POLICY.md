@@ -38,7 +38,7 @@ Veriler cihazınızda olduğu için uygulamayı silmek veya Ayarlar → Verileri
 
 #### İletişim
 
-Sorularınız için: support@shotmat.app
+Sorularınız için: scetere2025@gmail.com
 
 Web: https://shotmat.app/privacy
 
@@ -76,6 +76,6 @@ Because data stays on your device, you can delete the app or use Settings → Re
 
 #### Contact
 
-Questions: support@shotmat.app
+Questions: scetere2025@gmail.com
 
 Web: https://shotmat.app/privacy
