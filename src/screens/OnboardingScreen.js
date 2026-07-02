@@ -101,6 +101,19 @@ export default function OnboardingScreen({ onDone }) {
             <Text style={styles.hint}>{t('onboarding.nameHint')}</Text>
           </View>
 
+          {/* Entertainment disclaimer */}
+          <View style={styles.entertainmentCard}>
+            <View style={styles.kvkkHeader}>
+              <MaterialCommunityIcons
+                name="party-popper"
+                size={20}
+                color={Colors.primary}
+              />
+              <Text style={styles.kvkkTitle}>{t('onboarding.entertainmentTitle')}</Text>
+            </View>
+            <Text style={styles.kvkkText}>{t('onboarding.entertainmentText')}</Text>
+          </View>
+
           {/* KVKK */}
           <View style={styles.kvkkCard}>
             <View style={styles.kvkkHeader}>
@@ -217,7 +230,15 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.md,
+  },
+  entertainmentCard: {
+    backgroundColor: Colors.card,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.primary + '44',
+    marginBottom: Spacing.lg,
   },
   kvkkHeader: {
     flexDirection: 'row',

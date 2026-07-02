@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -21,10 +22,13 @@ import {
   BorderRadius,
   Buttons,
   Layout,
-  Shadows,
   Gradients,
 } from '../styles/GlobalStyles';
 import PremiumService from '../services/PremiumService';
+import {
+  PRIVACY_POLICY_URL,
+  TERMS_OF_USE_URL,
+} from '../constants/brand';
 import AppLogo from '../components/AppLogo';
 import ScreenHeader from '../components/ScreenHeader';
 
@@ -39,9 +43,16 @@ export default function PremiumScreen() {
   const navigation = useNavigation();
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [localizedPrice, setLocalizedPrice] = useState(null);
 
   useEffect(() => {
     PremiumService.isPremium().then(setIsPremium);
+    PremiumService.getSubscriptionProduct().then((product) => {
+      if (!product) return;
+      setLocalizedPrice(
+        product.displayPrice || product.localizedPrice || null
+      );
+    });
   }, []);
 
   const handlePurchase = async () => {
@@ -70,6 +81,17 @@ export default function PremiumScreen() {
     }
   };
 
+  const openUrl = async (url) => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) await Linking.openURL(url);
+    } catch {
+      Alert.alert(t('common.error'), t('common.error'));
+    }
+  };
+
+  const priceLabel = localizedPrice || t('premium.priceLoading');
+
   return (
     <SafeAreaView style={Layout.screen}>
       <ScreenHeader onBack={() => navigation.goBack()} />
@@ -91,7 +113,6 @@ export default function PremiumScreen() {
           </View>
         ) : (
           <>
-            {/* Features */}
             <View style={styles.featuresCard}>
               {FEATURES.map((f) => (
                 <View key={f.key} style={styles.featureRow}>
@@ -103,9 +124,13 @@ export default function PremiumScreen() {
               ))}
             </View>
 
-            {/* Price & CTA */}
+            <View style={styles.subscriptionInfoCard}>
+              <Text style={styles.subscriptionTitle}>{t('premium.subscriptionTitle')}</Text>
+              <Text style={styles.subscriptionMeta}>{t('premium.subscriptionLength')}</Text>
+              <Text style={styles.priceText}>{priceLabel}</Text>
+            </View>
+
             <View style={styles.priceSection}>
-              <Text style={styles.priceText}>{t('premium.price')}</Text>
               <TouchableOpacity
                 style={[Buttons.primary, styles.buyBtn]}
                 onPress={handlePurchase}
@@ -126,6 +151,16 @@ export default function PremiumScreen() {
                 activeOpacity={0.8}
               >
                 <Text style={Buttons.ghostText}>{t('premium.restore')}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.legalLinks}>
+              <TouchableOpacity onPress={() => openUrl(PRIVACY_POLICY_URL)} activeOpacity={0.7}>
+                <Text style={styles.legalLink}>{t('premium.privacyLink')}</Text>
+              </TouchableOpacity>
+              <Text style={styles.legalDivider}>·</Text>
+              <TouchableOpacity onPress={() => openUrl(TERMS_OF_USE_URL)} activeOpacity={0.7}>
+                <Text style={styles.legalLink}>{t('premium.termsLink')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -182,18 +217,57 @@ const styles = StyleSheet.create({
     ...Typography.body,
     flex: 1,
   },
+  subscriptionInfoCard: {
+    backgroundColor: Colors.card,
+    borderRadius: BorderRadius.lg,
+    marginHorizontal: Spacing.md,
+    padding: Spacing.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.xs,
+    marginBottom: Spacing.lg,
+  },
+  subscriptionTitle: {
+    ...Typography.h3,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+  subscriptionMeta: {
+    ...Typography.bodySmall,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
   priceSection: {
     paddingHorizontal: Spacing.md,
     alignItems: 'center',
     gap: Spacing.md,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   priceText: {
     ...Typography.h2,
     color: Colors.primary,
+    textAlign: 'center',
   },
   buyBtn: {
     width: '100%',
+  },
+  legalLinks: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  legalLink: {
+    ...Typography.bodySmall,
+    color: Colors.primary,
+    textDecorationLine: 'underline',
+  },
+  legalDivider: {
+    ...Typography.bodySmall,
+    color: Colors.textMuted,
   },
   termsText: {
     ...Typography.caption,

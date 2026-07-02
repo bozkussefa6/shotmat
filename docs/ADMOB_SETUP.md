@@ -37,6 +37,8 @@ Yeni uygulamalar AdMob’da “Getting ready” durumunda olabilir. İlk günler
 - TestFlight / production build’de reklam gelmeyebilir
 - Test reklamları `__DEV__` modunda otomatik kullanılır ([`AdService.js`](../src/services/AdService.js))
 
+**ATT:** `userTrackingUsageDescription` kaldırıldı — uygulama izleme izni istemez. App Privacy’de tracking = No.
+
 Yayın sonrası App Store linkini AdMob’a ekle (Apps → App settings → Store listing).
 
 ## 5. App Store Connect — App Privacy

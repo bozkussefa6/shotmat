@@ -1,79 +1,86 @@
 # App Store — Metadata (kopyala-yapıştır)
 
+Review reddi (4.3b) sonrası güncellendi — içki/shot vurgusu kaldırıldı, parti soru oyunu odaklı.
+
 ## Turkish (Primary)
 
 ### Name
 ShotMat
 
 ### Subtitle (30 karakter max)
-Parti shot oyunu
+Parti soru oyunu
 
 ### Promotional Text (170 karakter, opsiyonel)
-Arkadaşlarınla soru-cevap partisi! ShotMat ile grup, itiraf ve görev soruları — kim en çok shot içecek?
+Arkadaşlarınla truth, dare ve grup soruları! Özel sorular ekle, parti geçmişini takip et — ceza puanları isteğe bağlı.
 
 ### Description
 
-ShotMat, arkadaşlarınla oynayacağın eğlenceli bir parti oyunudur.
+ShotMat, arkadaşlarınla oynayacağın eğlenceli bir parti soru oyunudur.
 
 • Grup, itiraf ve görev soruları
 • Oyuncuları kaydet, partileri takip et
 • Kendi sorularını ekle
-• Shot sayacı ve istatistikler
+• Ceza puanı sayacı ve istatistikler
 • Türkçe ve İngilizce
 
 Nasıl oynanır?
-Oyuncuları seç, soru tiplerini belirle ve partiyi başlat. Sorular sırayla gelir; cevaplayamayan veya görevi yapmayan shot içer. En az shot içen kazanır!
+Oyuncuları seç, soru tiplerini belirle ve partiyi başlat. Sorular sırayla gelir; cevaplayamayan veya görevi yapmayan isteğe bağlı ceza puanı alır. En az ceza puanı alan kazanır!
 
 Tüm veriler cihazında kalır — hesap gerekmez.
 
 Premium ile reklamsız oyna ve sınırsız özel soru ekle.
 
-ShotMat yalnızca eğlence amaçlıdır. Sorumlu alkol tüketimi tavsiye edilir. 17+
+ShotMat yalnızca eğlence amaçlıdır. Ceza puanları ve alkol kullanımı isteğe bağlıdır. 17+
+
+Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 ### Keywords (100 karakter, virgülle)
-parti,shot,oyun,drinking,truth,dare,arkadaş,grup,içki,eğlence
+parti,oyun,truth,dare,grup,arkadaş,soru,eğlence,mevcut,gece
 
 ### Support URL
-https://shotmat.app/support
+https://bozkussefa6.github.io/shotmat/public/support.html
 
-Alternatif: mailto:scetere2025@gmail.com
+### Privacy Policy URL
+https://bozkussefa6.github.io/shotmat/public/privacy.html
 
 ---
 
 ## English
 
 ### Subtitle
-Party shot game
+Party question game
 
 ### Description
 
-ShotMat is a fun party game to play with friends.
+ShotMat is a fun party question game to play with friends.
 
 • Group, confession, and dare questions
 • Save players and track parties
 • Add custom questions
-• Shot counter and stats
+• Optional penalty-point tracking and stats
 • Turkish and English
 
 How to play
-Pick players, choose question types, and start the party. Questions appear in turn; those who fail answer or complete a dare take a shot. Lowest shot count wins!
+Pick players, choose question types, and start the party. Questions appear in turn; those who fail to answer or complete a dare may receive optional penalty points. Lowest penalty count wins!
 
 All data stays on your device — no account needed.
 
 Go Premium for ad-free play and unlimited custom questions.
 
-ShotMat is for entertainment only. Please drink responsibly. 17+
+ShotMat is for entertainment only. Penalty points and alcohol are optional. 17+
+
+Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 ### Keywords
-party,shot,game,drinking,truth,dare,friends,group,fun
+party,game,truth,dare,friends,group,questions,fun,night
 
 ---
 
-## What's New (v1.0.0)
+## What's New (v1.0.0 resubmit)
 
-İlk sürüm — parti oyunu, özel sorular, istatistikler ve Premium abonelik.
+Uygulama metinleri ve mağaza açıklaması güncellendi. Premium ekranına gizlilik ve kullanım koşulları linkleri eklendi.
 
-First release — party game, custom questions, stats, and Premium subscription.
+Updated in-app copy and store listing. Added Privacy Policy and Terms of Use links on Premium screen.
 
 ---
 
@@ -83,12 +90,8 @@ First release — party game, custom questions, stats, and Premium subscription.
 
 ---
 
-## Screenshot önerileri
+## Screenshot notu
 
-1. Ana sayfa — Yeni Parti
-2. Oyuncu seçimi
-3. Soru ekranı
-4. Parti sonu — kazanan
-5. İstatistikler (opsiyonel)
+Ekran görüntülerinde "Shot", "içki" veya alkol vurgusu varsa yeniden çek veya güncel build ile değiştir.
 
 Simülatör: iPhone 15 Pro Max (6.7") → Cmd+S ile screenshot

@@ -5,10 +5,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Typography, BorderRadius, Spacing } from '../styles/GlobalStyles';
 
 /**
- * ShotBadge — unified shot indicator used across all screens.
+ * ShotBadge — unified penalty-point indicator used across all screens.
  *
  * Props:
- *   count    — number of shots to display (omit to show icon only)
+ *   count    — number of penalty points to display (omit to show icon only)
  *   size     — 'sm' | 'md' | 'lg' | 'xl'  (default: 'md'; xl for decorative card icons)
  *   variant  — 'badge' | 'inline' | 'icon'
  *              badge  : rounded pill with background (for lists/cards)
@@ -20,14 +20,14 @@ export default function ShotBadge({ count, size = 'md', variant = 'badge' }) {
 
   if (variant === 'icon') {
     return (
-      <MaterialCommunityIcons name="cup" size={cfg.iconSize} color={Colors.danger} />
+      <MaterialCommunityIcons name="flag" size={cfg.iconSize} color={Colors.danger} />
     );
   }
 
   if (variant === 'inline') {
     return (
       <View style={styles.inlineRow}>
-        <MaterialCommunityIcons name="cup" size={cfg.iconSize} color={Colors.danger} />
+        <MaterialCommunityIcons name="flag" size={cfg.iconSize} color={Colors.danger} />
         {count !== undefined && (
           <Text style={[styles.inlineCount, { fontSize: cfg.fontSize }]}>{count}</Text>
         )}
@@ -37,7 +37,7 @@ export default function ShotBadge({ count, size = 'md', variant = 'badge' }) {
 
   return (
     <View style={[styles.badge, cfg.badgePadding]}>
-      <MaterialCommunityIcons name="cup" size={cfg.iconSize} color={Colors.danger} />
+      <MaterialCommunityIcons name="flag" size={cfg.iconSize} color={Colors.danger} />
       {count !== undefined && (
         <Text style={[styles.badgeCount, { fontSize: cfg.fontSize }]}>{count}</Text>
       )}

@@ -204,6 +204,27 @@ const setPremium = async (value) => {
   await StorageService.saveSettings({ isPremium: value });
 };
 
+const getSubscriptionProduct = async () => {
+  if (!isNativeIAPAvailable()) return null;
+
+  const iap = loadIAP();
+  if (!iap) return null;
+
+  const ready = await initIAP();
+  if (!ready) return null;
+
+  try {
+    const products = await iap.fetchProducts({
+      skus: [PREMIUM_PRODUCT_ID],
+      type: 'subs',
+    });
+    return products?.[0] || null;
+  } catch (e) {
+    console.log('[PremiumService] fetch product failed:', e?.message);
+    return null;
+  }
+};
+
 const PremiumService = {
   PRODUCT_ID: PREMIUM_PRODUCT_ID,
   isNativeIAPAvailable,
@@ -212,6 +233,7 @@ const PremiumService = {
   purchasePremium,
   restorePurchase,
   setPremium,
+  getSubscriptionProduct,
   initIAP,
   syncPremiumFromStore: async () => {
     const iap = loadIAP();

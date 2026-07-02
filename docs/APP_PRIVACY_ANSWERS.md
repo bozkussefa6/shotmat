@@ -1,6 +1,8 @@
 # App Store Connect — App Privacy Anketi
 
-ShotMat için önerilen cevaplar. App Store Connect → App Privacy → Get Started.
+ShotMat için önerilen cevaplar (review reddi sonrası — **tracking: No**).
+
+App Store Connect → App Privacy → Edit → Publish.
 
 ## Özet
 
@@ -9,13 +11,13 @@ ShotMat için önerilen cevaplar. App Store Connect → App Privacy → Get Star
 
 ## Data types
 
-### Identifiers — Advertising Data
+### Identifiers — Device ID
 
 | Soru | Cevap |
 |------|--------|
 | Collect? | Yes |
 | Linked to user? | No (ShotMat hesabı yok) |
-| Used for tracking? | AdMob policy — typically Yes for advertising |
+| **Used for tracking?** | **No** — ATT kaldırıldı, izin istenmiyor |
 | Purpose | Third-Party Advertising |
 | Third party | Google (AdMob) |
 
@@ -30,9 +32,9 @@ ShotMat için önerilen cevaplar. App Store Connect → App Privacy → Get Star
 ## Notlar
 
 - Oyuncu adları, sorular, parti sonuçları: **cihazda kalır**, App Privacy’de “Collected by you” olarak işaretlenmez.
-- Privacy Nutrition Label’da yalnızca reklam partner’ının topladığı veriler görünür.
+- `NSUserTrackingUsageDescription` app binary’den kaldırıldı (`app.json`).
 - AdMob App Privacy formunu Google dokümantasyonu ile çapraz kontrol et: https://support.google.com/admob/answer/10113207
 
 ## Privacy Policy URL
 
-`https://shotmat.app/privacy` — kaynak: [public/privacy.html](./public/privacy.html)
+`https://bozkussefa6.github.io/shotmat/public/privacy.html`

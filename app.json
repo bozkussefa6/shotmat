@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.shotmat.app",
-      "buildNumber": "1",
+      "buildNumber": "4",
       "infoPlist": {
         "NSCameraUsageDescription": "ShotMat kamera erişimi gerektirmez.",
         "NSPhotoLibraryUsageDescription": "Parti sonuçlarınızı kaydetmek için fotoğraf galerisine erişim gerekebilir.",
@@ -41,8 +41,7 @@
         "react-native-google-mobile-ads",
         {
           "iosAppId": "ca-app-pub-7264754027467588~4008160204",
-          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
-          "userTrackingUsageDescription": "Reklamların size uygun sunulması için kullanılır."
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713"
         }
       ]
     ],

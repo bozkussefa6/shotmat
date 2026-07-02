@@ -1,66 +1,62 @@
-# App Review — Gönderim
+# App Review — Gönderim (v1.0.0 resubmit)
 
 ## Ön kontrol
 
-App Store Connect’te tüm uyarılar giderilmiş olmalı:
-
-- [ ] Privacy Policy URL girildi
-- [ ] Screenshots (6.7") yüklendi
-- [ ] `shotmat_premium_yearly` → **Ready to Submit**
-- [ ] TestFlight build seçildi
-- [ ] Export Compliance soruldu → **No** (yalnızca standart HTTPS; `ITSAppUsesNonExemptEncryption: false`)
-
-## v1.0.0 sürümü
-
-1. App Store Connect → ShotMat → **App Store** → **+ Version** → `1.0.0`
-2. Metadata: [APP_STORE_METADATA.md](./APP_STORE_METADATA.md)
-3. **Build** → TestFlight’taki en son production build
-4. **Copyright:** `© 2026 ShotMat`
+- [ ] Privacy Policy URL: `https://bozkussefa6.github.io/shotmat/public/privacy.html`
+- [ ] App Privacy → Device ID → **Used for tracking: No**
+- [ ] Description sonunda EULA linki
+- [ ] `shotmat_premium_yearly` → Ready to Submit
+- [ ] Build **1.0.0 (4)** seçildi
+- [ ] Export Compliance → No
 
 ## Review notes (kopyala-yapıştır)
 
 ```
-ShotMat is an offline party game for adults (17+). All player names, party history, and custom questions stay on device — no account or server required.
+ShotMat is an offline party question game for adults (17+). Question types: group, personal confession, and dare. Optional penalty-point scoring — alcohol is not required.
 
-Premium (shotmat_premium_yearly) is an optional yearly subscription that removes ads and unlocks unlimited custom questions. Restore purchases is available on the Premium screen.
+No sign-in required. All player names, party history, and custom questions stay on device.
 
-To test Premium in sandbox:
-1. Sign in with a Sandbox Apple ID (Settings → App Store → Sandbox Account)
-2. Open Profile → Go Premium → purchase or restore
+Premium (shotmat_premium_yearly) — 1-year auto-renewable subscription:
+- Open Profile → Go Premium
+- Subscription title, length, and price shown on screen
+- Privacy Policy and Terms of Use (EULA) links are tappable below the purchase button
 
-Ads are shown via Google AdMob for non-premium users (interstitial after every 3 questions and at party end).
+Sandbox Premium test:
+1. Settings → App Store → Sandbox Account
+2. Profile → Go Premium → purchase or restore
 
-Mature party game content — age rating 17+. Entertainment only; responsible drinking encouraged.
+ATT / tracking: We removed NSUserTrackingUsageDescription from the binary. The app does not request App Tracking Transparency permission.
+
+Ads: Google AdMob interstitials for non-premium users (every 3 questions + party end).
+
+4.3(b) update: We revised in-app copy and App Store metadata to position ShotMat as a party question game with optional penalty points, not a drinking game.
+```
+
+## Resolution Center reply (4.3b + 2.1 + 3.1.2c)
+
+```
+Thank you for the feedback.
+
+4.3(b): We updated in-app text and App Store metadata. ShotMat is a party question game with optional penalty-point scoring; alcohol is not required. Unique features: bilingual TR/EN, custom questions, party history & stats, slot-style round transitions, offline on-device data.
+
+2.1 ATT: We removed NSUserTrackingUsageDescription from the app binary and updated App Privacy to declare no tracking.
+
+3.1.2(c): Premium screen now shows subscription title, length, price, and functional Privacy Policy + Terms of Use (EULA) links. EULA link added to App Store description.
+
+Please review build 1.0.0 (4).
 ```
 
 ## Submit
 
-1. **Add for Review**
-2. **Submit to App Review**
+1. Yeni build yükle (build 4)
+2. ASC → v1.0.0 → metadata güncelle ([APP_STORE_METADATA.md](./APP_STORE_METADATA.md))
+3. **Add for Review** → **Submit to App Review**
+4. Resolution Center’a yukarıdaki reply’i gönder
 
-İnceleme süresi genelde 24–48 saat.
-
-## Build’i otomatik yükleme (opsiyonel)
+## Build
 
 ```bash
-eas login
-npm run submit:ios
+eas build --platform ios --profile production
 ```
 
-İlk submit’te Apple ID, app-specific password ve ASC app seçimi sorulur.
-
-`eas.json` submit bölümüne isteğe bağlı olarak eklenebilir (ASC’de app oluşturduktan sonra):
-
-```json
-"submit": {
-  "production": {
-    "ios": {
-      "appleId": "senin@email.com",
-      "ascAppId": "1234567890",
-      "appleTeamId": "ABCDE12345"
-    }
-  }
-}
-```
-
-`ascAppId`: App Store Connect → App Information → Apple ID (sayısal)
+Transporter ile `.ipa` yüklenebilir. `ios.buildNumber` = `4`.
