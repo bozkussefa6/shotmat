@@ -1,4 +1,4 @@
-// 100 default questions — ShotMat v2 draft (applied from docs/QUESTIONS_DRAFT.md)
+// 100 default questions — PartyRound
 // type: 'group' | 'personal' | 'dare'
 // {{player}} placeholder is replaced at runtime
 

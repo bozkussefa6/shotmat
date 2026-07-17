@@ -21,7 +21,7 @@ import {
 } from '../styles/GlobalStyles';
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
-import ShotBadge from '../components/ShotBadge';
+import ScoreBadge from '../components/ScoreBadge';
 import ScreenHeader from '../components/ScreenHeader';
 import ScreenSafeArea from '../components/ScreenSafeArea';
 import { resetGameFlowTo } from '../navigation/gameFlowHelpers';
@@ -102,7 +102,7 @@ export default function GameStatusScreen() {
               <View style={{ flex: 1 }}>
                 <View style={styles.playerNameRow}>
                   <Text style={styles.playerName}>{player.name}</Text>
-                  <ShotBadge count={shots} size="sm" variant="inline" />
+                  <ScoreBadge count={shots} size="sm" variant="inline" />
                 </View>
                 <View style={styles.barBg}>
                   <View style={[styles.barFill, { width: barWidth, backgroundColor: shots > 0 ? Colors.danger : Colors.border }]} />

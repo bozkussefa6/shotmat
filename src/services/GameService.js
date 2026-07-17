@@ -54,7 +54,7 @@ const pickRandomPlayer = (playerIds, excludeId = null) => {
   return eligible[Math.floor(Math.random() * eligible.length)];
 };
 
-const createGame = async (players, questionMode, selectedTypes) => {
+const createGame = async (players, questionMode, selectedTypes, scoringEnabled = true) => {
   const questionPool = await buildQuestionPool(questionMode, selectedTypes);
   const game = {
     id: generateId(),
@@ -64,6 +64,7 @@ const createGame = async (players, questionMode, selectedTypes) => {
     playerIds: players.map((p) => p.id),
     selectedTypes,
     questionMode,
+    scoringEnabled: scoringEnabled !== false,
     questionPool,
     currentQuestionIndex: 0,
     rounds: [],

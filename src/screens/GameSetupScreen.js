@@ -44,6 +44,7 @@ export default function GameSetupScreen() {
   const [addingNew, setAddingNew] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState(['group', 'personal', 'dare']);
   const [questionMode, setQuestionMode] = useState('system_only');
+  const [scoringEnabled, setScoringEnabled] = useState(true);
   const [hasCustomQuestions, setHasCustomQuestions] = useState(false);
   const [mainUser, setMainUser] = useState(null);
   const [settings, setSettings] = useState(null);
@@ -150,7 +151,12 @@ export default function GameSetupScreen() {
 
   const doStartGame = async () => {
     const players = savedPlayers.filter((p) => selectedPlayerIds.includes(p.id));
-    const game = await GameService.createGame(players, questionMode, selectedTypes);
+    const game = await GameService.createGame(
+      players,
+      questionMode,
+      selectedTypes,
+      scoringEnabled
+    );
     navigation.replace('QuestionTransition', { gameId: game.id, isFirst: true });
   };
 
@@ -313,6 +319,37 @@ export default function GameSetupScreen() {
                 </TouchableOpacity>
               );
             })}
+
+            <Text style={[styles.stepTitle, { marginTop: Spacing.lg }]}>
+              {t('gameSetup.scoringTitle')}
+            </Text>
+            <Text style={styles.stepSubtitle}>{t('gameSetup.scoringSubtitle')}</Text>
+            <TouchableOpacity
+              style={[styles.modeCard, scoringEnabled && styles.modeCardSelected]}
+              onPress={() => setScoringEnabled(true)}
+              activeOpacity={0.8}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modeName}>{t('gameSetup.scoringOn')}</Text>
+                <Text style={styles.modeDesc}>{t('gameSetup.scoringOnDesc')}</Text>
+              </View>
+              {scoringEnabled && (
+                <MaterialCommunityIcons name="check-circle" size={22} color={Colors.primary} />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modeCard, !scoringEnabled && styles.modeCardSelected]}
+              onPress={() => setScoringEnabled(false)}
+              activeOpacity={0.8}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modeName}>{t('gameSetup.scoringOff')}</Text>
+                <Text style={styles.modeDesc}>{t('gameSetup.scoringOffDesc')}</Text>
+              </View>
+              {!scoringEnabled && (
+                <MaterialCommunityIcons name="check-circle" size={22} color={Colors.primary} />
+              )}
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>

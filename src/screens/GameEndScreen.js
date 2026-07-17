@@ -28,7 +28,7 @@ import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
 import AdService from '../services/AdService';
 import PremiumService from '../services/PremiumService';
-import ShotBadge from '../components/ShotBadge';
+import ScoreBadge from '../components/ScoreBadge';
 import AppLogo from '../components/AppLogo';
 import PlayerAvatar from '../components/PlayerAvatar';
 import ScreenSafeArea from '../components/ScreenSafeArea';
@@ -157,7 +157,7 @@ export default function GameEndScreen() {
                   <Text style={styles.scoreRank}>{i + 1}.</Text>
                   <PlayerAvatar player={player} size="sm" />
                   <Text style={styles.scoreName}>{player.name}</Text>
-                  <ShotBadge count={shotCounts[player.id] || 0} size="sm" variant="inline" />
+                  <ScoreBadge count={shotCounts[player.id] || 0} size="sm" variant="inline" />
                 </View>
               ))}
             </View>

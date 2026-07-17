@@ -1,22 +1,22 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors, Typography } from '../styles/GlobalStyles';
+import { APP_NAME } from '../constants/brand';
 
 const SIZES = {
-  sm: { shotSize: 18, matSize: 18, gap: 0 },
-  md: { shotSize: 26, matSize: 26, gap: 0 },
-  lg: { shotSize: 36, matSize: 36, gap: 0 },
-  xl: { shotSize: 44, matSize: 44, gap: 0 },
+  sm: { fontSize: 18 },
+  md: { fontSize: 26 },
+  lg: { fontSize: 36 },
+  xl: { fontSize: 44 },
 };
 
 export default function AppLogo({ size = 'md', variant = 'default' }) {
   const cfg = SIZES[size] || SIZES.md;
-  const matColor = variant === 'premium' ? Colors.primaryLight : Colors.primary;
+  const color = variant === 'premium' ? Colors.primaryLight : Colors.primary;
 
   return (
     <View style={styles.row}>
-      <Text style={[styles.shot, { fontSize: cfg.shotSize }]}>Shot</Text>
-      <Text style={[styles.mat, { fontSize: cfg.matSize, color: matColor }]}>Mat</Text>
+      <Text style={[styles.name, { fontSize: cfg.fontSize, color }]}>{APP_NAME}</Text>
     </View>
   );
 }
@@ -26,13 +26,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
   },
-  shot: {
-    ...Typography.h2,
-    color: Colors.textPrimary,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  mat: {
+  name: {
     ...Typography.h2,
     fontWeight: '800',
     letterSpacing: 0.5,

@@ -2,20 +2,17 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { Colors, Typography, BorderRadius, Spacing } from '../styles/GlobalStyles';
+import { Colors, Typography, BorderRadius } from '../styles/GlobalStyles';
 
 /**
- * ShotBadge — unified penalty-point indicator used across all screens.
+ * ScoreBadge — unified penalty-point indicator used across all screens.
  *
  * Props:
  *   count    — number of penalty points to display (omit to show icon only)
- *   size     — 'sm' | 'md' | 'lg' | 'xl'  (default: 'md'; xl for decorative card icons)
+ *   size     — 'sm' | 'md' | 'lg' | 'xl'  (default: 'md')
  *   variant  — 'badge' | 'inline' | 'icon'
- *              badge  : rounded pill with background (for lists/cards)
- *              inline : plain icon + number side by side, no background
- *              icon   : just the icon, no count
  */
-export default function ShotBadge({ count, size = 'md', variant = 'badge' }) {
+export default function ScoreBadge({ count, size = 'md', variant = 'badge' }) {
   const cfg = SIZE_CONFIG[size] || SIZE_CONFIG.md;
 
   if (variant === 'icon') {

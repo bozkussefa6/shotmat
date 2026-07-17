@@ -3,11 +3,11 @@ import { normalizePlayer, getAvatarColor } from '../utils/playerAvatar';
 import { isDuplicatePlayerName } from '../utils/playerNames';
 
 const KEYS = {
-  MAIN_USER: 'shotmat_main_user',
-  PLAYERS: 'shotmat_players',
-  GAMES: 'shotmat_games',
-  CUSTOM_QUESTIONS: 'shotmat_custom_questions',
-  SETTINGS: 'shotmat_settings',
+  MAIN_USER: 'partyround_main_user',
+  PLAYERS: 'partyround_players',
+  GAMES: 'partyround_games',
+  CUSTOM_QUESTIONS: 'partyround_custom_questions',
+  SETTINGS: 'partyround_settings',
 };
 
 const DEFAULT_SETTINGS = {

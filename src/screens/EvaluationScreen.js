@@ -61,10 +61,13 @@ export default function EvaluationScreen() {
     }
   };
 
+  const scoringEnabled = game?.scoringEnabled !== false;
+
   const toggleShotTaker = async (playerId) => {
+    if (!scoringEnabled) return;
     const willAdd = !shotTakers.includes(playerId);
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (willAdd) SoundService.play('shot');
+    if (willAdd) SoundService.play('penalty');
     setShotTakers((prev) =>
       prev.includes(playerId) ? prev.filter((id) => id !== playerId) : [...prev, playerId]
     );
@@ -72,9 +75,9 @@ export default function EvaluationScreen() {
 
   const handleDareResult = async (completed) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (!completed) SoundService.play('shot');
+    if (!completed && scoringEnabled) SoundService.play('penalty');
     setDareCompleted(completed);
-    if (!completed && targetPlayerId) {
+    if (scoringEnabled && !completed && targetPlayerId) {
       setShotTakers([targetPlayerId]);
     } else {
       setShotTakers([]);
@@ -87,7 +90,7 @@ export default function EvaluationScreen() {
       id: GameService.generateId(),
       question: { tr: question.tr, en: question.en, type: question.type },
       targetPlayerId: targetPlayerId || null,
-      shotTakers,
+      shotTakers: scoringEnabled ? shotTakers : [],
       skipped: false,
       dareCompleted: questionType === 'dare' ? dareCompleted : undefined,
       timestamp: new Date().toISOString(),
@@ -100,6 +103,7 @@ export default function EvaluationScreen() {
   const typeColor = TypeColors[questionType] || Colors.primary;
 
   const getTitle = () => {
+    if (!scoringEnabled) return t('evaluation.titleQuestionsOnly');
     if (questionType === 'dare' && targetPlayer) {
       return t('evaluation.titleDare', { player: targetPlayer.name });
     }
@@ -123,7 +127,13 @@ export default function EvaluationScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        {isPersonalOrDare && targetPlayer && (
+        {!scoringEnabled && (
+          <View style={styles.questionsOnlyCard}>
+            <Text style={styles.questionsOnlyText}>{t('evaluation.questionsOnlyHint')}</Text>
+          </View>
+        )}
+
+        {scoringEnabled && isPersonalOrDare && targetPlayer && (
           <View style={styles.binaryRow}>
             <TouchableOpacity
               style={[
@@ -154,7 +164,7 @@ export default function EvaluationScreen() {
           </View>
         )}
 
-        {!isPersonalOrDare && (
+        {scoringEnabled && !isPersonalOrDare && (
           <View style={styles.playerSection}>
             {players.map((player) => {
               const isShot = shotTakers.includes(player.id);
@@ -176,7 +186,7 @@ export default function EvaluationScreen() {
           </View>
         )}
 
-        {shotTakers.length > 0 && (
+        {scoringEnabled && shotTakers.length > 0 && (
           <View style={styles.summaryRow}>
             <Text style={styles.summaryText}>
               {t('evaluation.shotCount', { count: shotTakers.length })}
@@ -187,9 +197,12 @@ export default function EvaluationScreen() {
 
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[Buttons.primary, (isPersonalOrDare && dareCompleted === null) && { opacity: 0.4 }]}
+          style={[
+            Buttons.primary,
+            scoringEnabled && isPersonalOrDare && dareCompleted === null && { opacity: 0.4 },
+          ]}
           onPress={handleContinue}
-          disabled={isPersonalOrDare && dareCompleted === null}
+          disabled={scoringEnabled && isPersonalOrDare && dareCompleted === null}
           activeOpacity={0.85}
         >
           <Text style={Buttons.primaryText}>{t('evaluation.continueGame')}</Text>
@@ -213,6 +226,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.xxl,
+  },
+  questionsOnlyCard: {
+    backgroundColor: Colors.card,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.primary + '44',
+    marginBottom: Spacing.lg,
+  },
+  questionsOnlyText: {
+    ...Typography.body,
+    textAlign: 'center',
+    color: Colors.textSecondary,
+    lineHeight: 22,
   },
   binaryRow: {
     flexDirection: 'row',

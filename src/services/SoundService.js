@@ -4,7 +4,7 @@ import StorageService from './StorageService';
 const SOUNDS = {
   spin: require('../../assets/sounds/spin.wav'),
   reveal: require('../../assets/sounds/reveal.wav'),
-  shot: require('../../assets/sounds/shot.wav'),
+  penalty: require('../../assets/sounds/penalty.wav'),
 };
 
 const soundObjects = {};

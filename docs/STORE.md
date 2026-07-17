@@ -1,21 +1,22 @@
-# ShotMat — Store Release Checklist
+# PartyRound — Store Release Checklist
 
-**Ana rehber:** [RELEASE_RUNBOOK.md](./RELEASE_RUNBOOK.md)
+**Yeni listing (4.3b sonrası):** [PARTYROUND_ASC_SETUP.md](./PARTYROUND_ASC_SETUP.md)
+
+**Eski ShotMat:** [RETIRE_SHOTMAT.md](./RETIRE_SHOTMAT.md)
 
 ## Quick links
 
 | Doc | Purpose |
 |-----|---------|
-| [RELEASE_RUNBOOK.md](./RELEASE_RUNBOOK.md) | Sıralı yayın adımları (başla buradan) |
-| [APPLE_ACCOUNT_SETUP.md](./APPLE_ACCOUNT_SETUP.md) | Developer Program, sözleşme, banka |
-| [APP_STORE_CONNECT.md](./APP_STORE_CONNECT.md) | ASC kayıt, IAP, TestFlight |
+| [PARTYROUND_ASC_SETUP.md](./PARTYROUND_ASC_SETUP.md) | Yeni ASC app adımları (başla buradan) |
+| [RETIRE_SHOTMAT.md](./RETIRE_SHOTMAT.md) | ShotMat withdraw / Resolution Center |
+| [SUBMIT_REVIEW.md](./SUBMIT_REVIEW.md) | İncelemeye gönder |
+| [APP_STORE_METADATA.md](./APP_STORE_METADATA.md) | Açıklama, keywords, subtitle |
 | [ADMOB_SETUP.md](./ADMOB_SETUP.md) | Reklam konsol kurulumu |
 | [EAS_BUILD.md](./EAS_BUILD.md) | İlk build + Apple credentials |
-| [SUBMIT_REVIEW.md](./SUBMIT_REVIEW.md) | İncelemeye gönder |
-| [PRIVACY_POLICY.md](./PRIVACY_POLICY.md) | Gizlilik metni |
-| [public/privacy.html](./public/privacy.html) | Yayınlanabilir HTML (GitHub Pages vb.) |
 | [APP_PRIVACY_ANSWERS.md](./APP_PRIVACY_ANSWERS.md) | App Privacy anketi cevapları |
-| [APP_STORE_METADATA.md](./APP_STORE_METADATA.md) | Açıklama, keywords, subtitle |
+| [public/privacy.html](./public/privacy.html) | Gizlilik HTML |
+| [public/support.html](./public/support.html) | Destek HTML |
 
 ## EAS Build
 
@@ -24,7 +25,6 @@ npm install -g eas-cli
 eas login
 npm run release:ios      # production build
 npm run submit:ios       # ASC'ye yükle (opsiyonel)
-npm run screenshots:ios  # 6.7" screenshot yakalama
 ```
 
-Config: [`eas.json`](../eas.json) | Bundle: `com.shotmat.app`
+Config: [`eas.json`](../eas.json) | Bundle: `com.kamoteakko.partyround` | Product: `partyround_premium_yearly`

@@ -19,7 +19,7 @@ import {
 } from '../styles/GlobalStyles';
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
-import ShotBadge from '../components/ShotBadge';
+import ScoreBadge from '../components/ScoreBadge';
 import PlayerAvatar from '../components/PlayerAvatar';
 
 import { formatDate } from '../utils/formatDate';
@@ -125,7 +125,7 @@ export default function StatsScreen() {
                     {t('stats.gamesPlayed', { count: st.gamesPlayed || 0 })}
                   </Text>
                 </View>
-                <ShotBadge count={st.totalShots || 0} size="md" />
+                <ScoreBadge count={st.totalShots || 0} size="md" />
               </View>
 
               <View style={styles.playerCardStats}>

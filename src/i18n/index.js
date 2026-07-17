@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import tr from '../translations/tr';
 import en from '../translations/en';
 
-const LANGUAGE_KEY = 'shotmat_language';
+const LANGUAGE_KEY = 'partyround_language';
 
 const getDeviceLanguage = () => {
   const locale = Localization.getLocales?.()?.[0]?.languageCode ?? 'tr';

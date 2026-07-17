@@ -24,7 +24,7 @@ import {
 } from '../styles/GlobalStyles';
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
-import ShotBadge from '../components/ShotBadge';
+import ScoreBadge from '../components/ScoreBadge';
 import PlayerAvatar from '../components/PlayerAvatar';
 
 import ScreenHeader from '../components/ScreenHeader';
@@ -155,7 +155,7 @@ export default function GameDetailScreen() {
               <Text style={[styles.playerName, player.deleted && styles.playerNameDeleted]}>
                 {player.name}
               </Text>
-              <ShotBadge count={shotCounts[player.id] || 0} size="sm" />
+              <ScoreBadge count={shotCounts[player.id] || 0} size="sm" />
             </View>
           )}
         />

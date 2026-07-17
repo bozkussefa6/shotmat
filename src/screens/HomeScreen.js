@@ -25,7 +25,7 @@ import {
 } from '../styles/GlobalStyles';
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
-import ShotBadge from '../components/ShotBadge';
+import ScoreBadge from '../components/ScoreBadge';
 import AppLogo from '../components/AppLogo';
 import { formatDate } from '../utils/formatDate';
 
@@ -190,7 +190,7 @@ export default function HomeScreen() {
                         {gamePlayers.map((p) => p.name).join(', ')}
                       </Text>
                     </View>
-                    <ShotBadge count={totalShots} size="sm" />
+                    <ScoreBadge count={totalShots} size="sm" />
                   </View>
                 </TouchableOpacity>
               );

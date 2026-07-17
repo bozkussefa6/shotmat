@@ -20,7 +20,7 @@ import {
 } from '../styles/GlobalStyles';
 import StorageService from '../services/StorageService';
 import GameService from '../services/GameService';
-import ShotBadge from '../components/ShotBadge';
+import ScoreBadge from '../components/ScoreBadge';
 import PlayerAvatar from '../components/PlayerAvatar';
 
 import { formatDateWithYear, formatDate } from '../utils/formatDate';
@@ -72,7 +72,7 @@ export default function GameHistoryScreen() {
             <MaterialCommunityIcons name="calendar" size={14} color={Colors.textMuted} />
             <Text style={styles.dateText}>{formatDate(game.createdAt, i18n.language)}</Text>
           </View>
-          <ShotBadge count={totalShots} size="sm" />
+          <ScoreBadge count={totalShots} size="sm" />
         </View>
 
         <View style={styles.avatarRow}>

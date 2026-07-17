@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "ShotMat",
-    "slug": "shotmat",
+    "name": "PartyRound",
+    "slug": "partyround",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,16 +14,16 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.shotmat.app",
-      "buildNumber": "4",
+      "bundleIdentifier": "com.kamoteakko.partyround",
+      "buildNumber": "1",
       "infoPlist": {
-        "NSCameraUsageDescription": "ShotMat kamera erişimi gerektirmez.",
-        "NSPhotoLibraryUsageDescription": "Parti sonuçlarınızı kaydetmek için fotoğraf galerisine erişim gerekebilir.",
+        "NSCameraUsageDescription": "PartyRound does not require camera access.",
+        "NSPhotoLibraryUsageDescription": "PartyRound may access your photo library to save party result images.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.shotmat.app",
+      "package": "com.kamoteakko.partyround",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0A0A"
